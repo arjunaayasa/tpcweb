@@ -1,4 +1,6 @@
-const detailSections = [
+import type { SiteSettings } from '@/lib/site-settings';
+
+const defaultDetailSections = [
   {
     name: 'Owlie Chat',
     headline: 'Owlie Chat untuk bertanya apapun yang anda inginkan tentang pajak.',
@@ -22,7 +24,13 @@ const detailSections = [
   },
 ];
 
-export default function FeatureDetails() {
+type FeatureDetailsProps = {
+  settings?: SiteSettings['featureDetails'];
+};
+
+export default function FeatureDetails({ settings }: FeatureDetailsProps) {
+  const detailSections = settings?.items?.length ? settings.items : defaultDetailSections;
+
   return (
     <section id="products" className="py-20 bg-gradient-to-b from-neutral-light to-white">
       <div className="max-w-6xl mx-auto px-6">

@@ -1,0 +1,1 @@
+postgres://postgres:Hhmeka06PsByLNQGDuMy2zNTadU9SjLMGNVRtsvjIaWLE1eTLfBPTuxWxPZ7hvto@43.173.1.144:5432/postgres

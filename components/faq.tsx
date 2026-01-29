@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { ChevronDown } from '@untitledui/icons';
+import type { SiteSettings } from '@/lib/site-settings';
 
-const faqs = [
+const defaultFaqs = [
   {
     question: 'Apakah Owlie Chat dapat digunakan untuk konsultasi pajak harian?',
     answer:
@@ -31,8 +32,14 @@ const faqs = [
   },
 ];
 
-export default function Faq() {
+type FaqProps = {
+  settings?: SiteSettings['faq'];
+};
+
+export default function Faq({ settings }: FaqProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const faqs = settings?.items?.length ? settings.items : defaultFaqs;
+  const side = settings?.side;
 
   return (
     <section id="faq" className="py-20 bg-gradient-to-b from-neutral-light to-white">
@@ -40,9 +47,11 @@ export default function Faq() {
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-start">
           <div className="space-y-6">
             <div className="animate-fade-up">
-              <h2 className="text-4xl md:text-5xl font-bold text-text-dark">FAQ</h2>
+              <h2 className="text-4xl md:text-5xl font-bold text-text-dark">
+                {settings?.title ?? 'Tanya Jawab'}
+              </h2>
               <p className="text-lg text-text-dark/70 mt-4">
-                Jawaban cepat untuk pertanyaan yang paling sering ditanyakan.
+                {settings?.subtitle ?? 'Jawaban cepat untuk pertanyaan yang paling sering ditanyakan.'}
               </p>
             </div>
 
@@ -88,18 +97,22 @@ export default function Faq() {
 
           <div className="lg:pl-6 animate-fade-up" style={{ animationDelay: '140ms' }}>
             <p className="text-sm uppercase tracking-[0.3em] text-secondary">
-              Panduan Singkat
+              {side?.kicker ?? 'Panduan Singkat'}
             </p>
             <h3 className="text-3xl md:text-4xl font-bold text-text-dark mt-4">
-              Berikut ini adalah ringkasan singkat seputar layanan TPC AI.
+              {side?.title ?? 'Berikut ini adalah ringkasan singkat seputar layanan TPC AI.'}
             </h3>
             <p className="text-lg text-text-dark/70 mt-4 leading-relaxed">
-              Gunakan FAQ ini untuk memahami cara kerja Owlie Chat, Tax Knowledge AI, hingga Studio AI. Jika masih ada pertanyaan, tim kami siap membantu Anda.
+              {side?.body ?? 'Gunakan Tanya Jawab ini untuk memahami cara kerja Owlie Chat, Tax Knowledge AI, hingga Studio AI. Jika masih ada pertanyaan, tim kami siap membantu Anda.'}
             </p>
             <div className="mt-6 space-y-3 text-text-dark/70">
-              <p>• Owlie Chat untuk konsultasi pajak instan.</p>
-              <p>• Tax Knowledge AI untuk riset regulasi.</p>
-              <p>• Studio AI untuk draft dokumen pajak.</p>
+              {(side?.bullets?.length ? side.bullets : [
+                'Owlie Chat untuk konsultasi pajak instan.',
+                'Tax Knowledge AI untuk riset regulasi.',
+                'Studio AI untuk draft dokumen pajak.',
+              ]).map((item) => (
+                <p key={item}>- {item}</p>
+              ))}
             </div>
           </div>
         </div>

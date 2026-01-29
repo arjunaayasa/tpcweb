@@ -5,17 +5,20 @@ import FeatureDetails from '@/components/feature-details';
 import Testimonials from '@/components/testimonials';
 import Faq from '@/components/faq';
 import Footer from '@/components/footer';
+import { getSiteSettings } from '@/lib/site-settings';
 
-export default function Home() {
+export default async function Home() {
+  const settings = await getSiteSettings();
+
   return (
     <main className="min-h-screen flex flex-col">
       <Navbar />
-      <Hero />
-      <FeatureCards />
-      <FeatureDetails />
+      <Hero settings={settings.hero} />
+      <FeatureCards settings={settings.features} />
+      <FeatureDetails settings={settings.featureDetails} />
       <Testimonials />
-      <Faq />
-      <Footer />
+      <Faq settings={settings.faq} />
+      <Footer settings={settings.footer} />
     </main>
   );
 }

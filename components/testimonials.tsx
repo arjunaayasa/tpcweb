@@ -1,54 +1,53 @@
-const testimonials = [
-  {
-    quote:
-      'Owlie Chat membantu tim kami menjawab pertanyaan pajak klien dalam hitungan menit, bukan jam.',
-    name: 'Rina S.',
-    role: 'Head of Tax',
-    company: 'FinTax Group',
-    initials: 'RS',
-    photo: '/images/testimonials/avatar-placeholder.svg',
-  },
-  {
-    quote:
-      'Tax Knowledge AI membuat pencarian pasal pajak jauh lebih cepat dan rapi untuk disusun dalam laporan.',
-    name: 'Budi P.',
-    role: 'Finance Manager',
-    company: 'Nusantara Logistik',
-    initials: 'BP',
-    photo: '/images/testimonials/avatar-placeholder.svg',
-  },
-  {
-    quote:
-      'Studio AI merapikan draft memo pajak kami sehingga bisa langsung dipakai untuk approval internal.',
-    name: 'Anita L.',
-    role: 'Senior Consultant',
-    company: 'Prime Advisory',
-    initials: 'AL',
-    photo: '/images/testimonials/avatar-placeholder.svg',
-  },
-  {
-    quote:
-      'TPC AI membuat proses review pajak lebih efisien tanpa mengorbankan akurasi.',
-    name: 'Dewi M.',
-    role: 'CFO',
-    company: 'Arjuna Manufacturing',
-    initials: 'DM',
-    photo: '/images/testimonials/avatar-placeholder.svg',
-  },
-  {
-    quote:
-      'Platform ini membantu kami fokus pada strategi, bukan sekadar mengulang pencarian regulasi.',
-    name: 'Rafi A.',
-    role: 'Tax Analyst',
-    company: 'Summit Holdings',
-    initials: 'RA',
-    photo: '/images/testimonials/avatar-placeholder.svg',
-  },
-];
+import { prisma } from '@/lib/prisma';
+import { DEFAULT_TESTIMONIALS, DEFAULT_TESTIMONIAL_PHOTO_URL } from '@/lib/testimonials';
 
 const floatDurations = ['7s', '8s', '9s', '7.5s', '8.5s'];
 
-export default function Testimonials() {
+const toInitials = (name: string) =>
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+
+export default async function Testimonials() {
+  let storedTestimonials = [] as Array<{
+    id: string;
+    quote: string;
+    name: string;
+    role: string;
+    company: string;
+    photoUrl: string;
+  }>;
+
+  try {
+    storedTestimonials = await prisma.testimonial.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  } catch {
+    storedTestimonials = [];
+  }
+  const testimonials = storedTestimonials.length
+    ? storedTestimonials.map((item) => ({
+        id: item.id,
+        quote: item.quote,
+        name: item.name,
+        role: item.role,
+        company: item.company,
+        initials: toInitials(item.name),
+        photo: item.photoUrl || DEFAULT_TESTIMONIAL_PHOTO_URL,
+      }))
+    : DEFAULT_TESTIMONIALS.map((item) => ({
+        id: item.id,
+        quote: item.quote,
+        name: item.name,
+        role: item.role,
+        company: item.company,
+        initials: toInitials(item.name),
+        photo: item.photoUrl || DEFAULT_TESTIMONIAL_PHOTO_URL,
+      }));
+
   return (
     <section id="testimonials" className="py-20 bg-gradient-to-b from-white to-neutral-light">
       <div className="max-w-6xl mx-auto px-6">
@@ -64,7 +63,7 @@ export default function Testimonials() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
           {testimonials.map((item, index) => (
             <div
-              key={item.name}
+              key={item.id ?? `${item.name}-${index}`}
               className="animate-fade-up"
               style={{ animationDelay: `${index * 120}ms` }}
             >

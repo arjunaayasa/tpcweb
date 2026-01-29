@@ -4,8 +4,9 @@ import {
   Stars01,
   Hourglass01,
 } from '@untitledui/icons';
+import type { SiteSettings } from '@/lib/site-settings';
 
-const features = [
+const baseFeatures = [
   {
     title: 'Owlie Chat',
     description:
@@ -75,16 +76,47 @@ const features = [
   },
 ];
 
-export default function FeatureCards() {
+type FeatureCardsProps = {
+  settings?: SiteSettings['features'];
+};
+
+export default function FeatureCards({ settings }: FeatureCardsProps) {
+  const cardOverrides = settings?.cards ?? [];
+  const features = baseFeatures.map((feature, index) => {
+    const override = cardOverrides[index];
+    return {
+      ...feature,
+      title: override?.title ?? feature.title,
+      description: override?.description ?? feature.description,
+    };
+  });
+
   return (
     <section id="features" className="py-20 bg-neutral-light">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-bold text-text-dark">
-            Fitur Lengkap TPC AI
+            {(() => {
+              const title = settings?.title ?? 'Fitur Lengkap TPC AI';
+              const parts = title.split('Lengkap');
+              if (parts.length === 1) {
+                return title;
+              }
+
+              return (
+                <>
+                  {parts[0]}
+                  <span className="relative inline-block">
+                    <span className="relative z-10">Lengkap</span>
+                    <span className="absolute left-0 -bottom-2 h-[3px] w-full rounded-full bg-secondary/80 animate-underline-grow" />
+                  </span>
+                  {parts.slice(1).join('Lengkap')}
+                </>
+              );
+            })()}
           </h2>
           <p className="text-lg text-text-dark/70 mt-4">
-            Semua alat penting tersedia dalam satu platform yang rapi dan aman.
+            {settings?.subtitle ?? 'Semua alat penting tersedia dalam satu platform yang rapi dan aman.'}
           </p>
         </div>
 
@@ -143,7 +175,7 @@ export default function FeatureCards() {
                           feature.theme?.label ?? 'text-secondary'
                         } ${hoverText}`}
                       >
-                        Feature
+                        Fitur
                       </p>
                       <h3
                         className={`text-2xl md:text-3xl font-semibold transition-colors ${headingBase} ${

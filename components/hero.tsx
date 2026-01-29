@@ -2,17 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { MessageChatSquare, BookOpen01, Send01 } from '@untitledui/icons';
+import type { SiteSettings } from '@/lib/site-settings';
 import ParticlesBg from './particles-bg';
 
-export default function Hero() {
-  const placeholders = [
-    'Tanya tentang batas waktu pelaporan SPT?',
-    'Bagaimana cara menghitung PPh 21 karyawan?',
-    'Apa saja syarat pengkreditan PPN masukan?',
-    'Kapan wajib lapor pajak tahunan perusahaan?',
-    'Bagaimana perlakuan pajak untuk transaksi ekspor?',
-    'Bolehkan biaya ini dibebankan dalam laporan pajak?',
-  ];
+type HeroProps = {
+  settings?: SiteSettings['hero'];
+};
+
+export default function Hero({ settings }: HeroProps) {
+  const placeholders =
+    settings?.placeholders?.length ? settings.placeholders : [
+      'Tanya tentang batas waktu pelaporan SPT?',
+      'Bagaimana cara menghitung PPh 21 karyawan?',
+      'Apa saja syarat pengkreditan PPN masukan?',
+      'Kapan wajib lapor pajak tahunan perusahaan?',
+      'Bagaimana perlakuan pajak untuk transaksi ekspor?',
+      'Bolehkan biaya ini dibebankan dalam laporan pajak?',
+    ];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
 
@@ -29,13 +35,13 @@ export default function Hero() {
       <ParticlesBg />
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         <h1 className="text-5xl md:text-7xl font-bold text-text-dark mb-6 animate-fade-up">
-          Intelligent Tax Solutions
+          {settings?.title ?? 'Intelligent Tax Solutions'}
         </h1>
         <p
           className="text-xl md:text-2xl text-secondary mb-10 animate-fade-up"
           style={{ animationDelay: '120ms' }}
         >
-          Powered by TPC AI. Experience the future of consulting.
+          {settings?.subtitle ?? 'Powered by TPC AI. Experience the future of consulting.'}
         </p>
 
         <div
@@ -44,12 +50,12 @@ export default function Hero() {
         >
           <button className="flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-xl hover:bg-secondary transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-lg min-w-[200px] justify-center">
             <MessageChatSquare className="w-6 h-6" />
-            Owlie Chat
+            {settings?.ctaPrimary ?? 'Owlie Chat'}
           </button>
 
           <button className="flex items-center gap-3 bg-transparent text-primary border border-primary px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm font-semibold text-lg min-w-[200px] justify-center">
             <BookOpen01 className="w-6 h-6" />
-            Tax Knowledge AI
+            {settings?.ctaSecondary ?? 'Tax Knowledge AI'}
           </button>
         </div>
 
