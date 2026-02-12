@@ -47,7 +47,7 @@ export default function Faq({ settings }: FaqProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-start">
           <div className="space-y-6">
             <div className="animate-fade-up">
-              <h2 className="text-4xl md:text-5xl font-bold text-text-dark">
+              <h2 className="text-4xl md:text-5xl font-bold font-playfair text-text-dark">
                 {settings?.title ?? 'Tanya Jawab'}
               </h2>
               <p className="text-lg text-text-dark/70 mt-4">
@@ -75,15 +75,13 @@ export default function Faq({ settings }: FaqProps) {
                         {item.question}
                       </span>
                       <ChevronDown
-                        className={`h-5 w-5 text-text-dark transition-transform ${
-                          isOpen ? 'rotate-180' : ''
-                        }`}
+                        className={`h-5 w-5 text-text-dark transition-transform ${isOpen ? 'rotate-180' : ''
+                          }`}
                       />
                     </button>
                     <div
-                      className={`overflow-hidden transition-[max-height] duration-300 ${
-                        isOpen ? 'max-h-40' : 'max-h-0'
-                      } ${isOpen ? 'animate-accordion-down' : 'animate-accordion-up'}`}
+                      className={`overflow-hidden transition-[max-height] duration-300 ${isOpen ? 'max-h-40' : 'max-h-0'
+                        } ${isOpen ? 'animate-accordion-down' : 'animate-accordion-up'}`}
                     >
                       <p className="text-text-dark/70 mt-3 leading-relaxed">
                         {item.answer}

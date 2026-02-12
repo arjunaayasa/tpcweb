@@ -30,29 +30,29 @@ export default async function Testimonials() {
   }
   const testimonials = storedTestimonials.length
     ? storedTestimonials.map((item) => ({
-        id: item.id,
-        quote: item.quote,
-        name: item.name,
-        role: item.role,
-        company: item.company,
-        initials: toInitials(item.name),
-        photo: item.photoUrl || DEFAULT_TESTIMONIAL_PHOTO_URL,
-      }))
+      id: item.id,
+      quote: item.quote,
+      name: item.name,
+      role: item.role,
+      company: item.company,
+      initials: toInitials(item.name),
+      photo: item.photoUrl || DEFAULT_TESTIMONIAL_PHOTO_URL,
+    }))
     : DEFAULT_TESTIMONIALS.map((item) => ({
-        id: item.id,
-        quote: item.quote,
-        name: item.name,
-        role: item.role,
-        company: item.company,
-        initials: toInitials(item.name),
-        photo: item.photoUrl || DEFAULT_TESTIMONIAL_PHOTO_URL,
-      }));
+      id: item.id,
+      quote: item.quote,
+      name: item.name,
+      role: item.role,
+      company: item.company,
+      initials: toInitials(item.name),
+      photo: item.photoUrl || DEFAULT_TESTIMONIAL_PHOTO_URL,
+    }));
 
   return (
     <section id="testimonials" className="py-20 bg-gradient-to-b from-white to-neutral-light">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-14 animate-fade-up">
-          <h2 className="text-4xl md:text-5xl font-bold text-text-dark">
+          <h2 className="text-4xl md:text-5xl font-bold font-playfair text-text-dark">
             Testimonial Klien
           </h2>
           <p className="text-lg text-text-dark/70 mt-4">

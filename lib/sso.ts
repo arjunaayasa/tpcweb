@@ -40,10 +40,11 @@ type AuthMeResponse = {
   usage?: UsageInfo;
 };
 
-type AuthProfileUser = AuthUser & {
+export type AuthProfileUser = AuthUser & {
   createdAt?: string;
   updatedAt?: string;
 };
+
 
 type AuthProfileResponse = {
   user?: AuthProfileUser;

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Taxindo Client Portal Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#f95700", // Bright Orange from the screenshot button
+                        secondary: "#D1FAE5", // Mint green base
+                        "secondary-dark": "#059669", // Darker mint for text/accents
+                        "purple-soft": "#E9D5FF", // For the badge background
+                        "purple-dark": "#7E22CE", // For the badge text
+                        "background-light": "#F8F9FA", // Soft off-white
+                        "background-dark": "#111827", // Deep charcoal/black
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F3F4F6",
+                        "text-muted-light": "#6B7280",
+                        "text-muted-dark": "#9CA3AF",
+                        "border-light": "#E5E7EB",
+                        "border-dark": "#374151",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem", // 12px
+                        'xl': "1rem", // 16px
+                        '2xl': "1.5rem", // 24px
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                        'hover': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark min-h-screen flex items-center justify-center p-4 sm:p-8 transition-colors duration-300">
+<div class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-soft border border-border-light dark:border-border-dark overflow-hidden transition-all duration-300">
+<div class="h-24 bg-[#FFF9F5] dark:bg-gray-800/50 w-full relative"></div>
+<div class="px-6 pb-8 text-center -mt-12 relative z-10">
+<div class="w-24 h-24 mx-auto bg-white dark:bg-gray-700 rounded-full flex items-center justify-center text-3xl font-bold text-gray-400 dark:text-gray-300 shadow-sm border-4 border-card-light dark:border-card-dark mb-4">
+                        A
+                    </div>
+<h2 class="text-xl font-bold text-text-light dark:text-white mb-1">Admin</h2>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark mb-4">admin@taxindo.co.id</p>
+<span class="inline-block bg-[#F3E8FF] dark:bg-[#3B0764] text-[#9333EA] dark:text-[#E9D5FF] text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide mb-8">
+                        Max Plan
+                    </span>
+<div class="border-t border-border-light dark:border-border-dark pt-6 space-y-3">
+<div class="flex justify-between items-center text-sm">
+<span class="text-text-muted-light dark:text-text-muted-dark">Role</span>
+<span class="font-semibold text-text-light dark:text-white uppercase">Admin</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-text-muted-light dark:text-text-muted-dark">Member Since</span>
+<span class="font-semibold text-text-light dark:text-white">Jan 2025</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-soft border border-border-light dark:border-border-dark p-6 transition-all duration-300">
+<div class="flex items-center gap-2 mb-6 text-primary">
+<span class="material-icons-round text-xl">link</span>
+<h3 class="text-lg font-bold text-text-light dark:text-white">Akses Cepat</h3>
+</div>
+<div class="space-y-1">
+<a class="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="text-sm font-medium text-text-muted-light dark:text-text-muted-dark group-hover:text-primary transition-colors">Tax Knowledge</span>
+<span class="material-icons-round text-gray-300 group-hover:text-primary text-lg transition-colors">arrow_forward</span>
+</a>
+<a class="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="text-sm font-medium text-text-muted-light dark:text-text-muted-dark group-hover:text-primary transition-colors">Owlie Chat</span>
+<span class="material-icons-round text-gray-300 group-hover:text-primary text-lg transition-colors">arrow_forward</span>
+</a>
+<a class="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="text-sm font-medium text-text-muted-light dark:text-text-muted-dark group-hover:text-primary transition-colors">Admin Panel</span>
+<span class="material-icons-round text-gray-300 group-hover:text-primary text-lg transition-colors">admin_panel_settings</span>
+</a>
+</div>
+</div>
+</div>
+<div class="lg:col-span-8 flex flex-col gap-6">
+<div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-soft border border-border-light dark:border-border-dark p-6 sm:p-8 flex-grow transition-all duration-300">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h2 class="text-xl font-bold text-text-light dark:text-white mb-1">Statistik Penggunaan AI</h2>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark">Periode: 2026-02</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-primary">
+<span class="material-icons-round">analytics</span>
+</div>
+</div>
+<div class="space-y-8">
+<div>
+<div class="flex justify-between items-end mb-2">
+<h4 class="font-semibold text-text-light dark:text-white">Owlie Lite</h4>
+<span class="text-sm font-bold text-primary">0 <span class="text-text-muted-light dark:text-text-muted-dark font-normal">/ ∞</span></span>
+</div>
+<div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 mb-2 overflow-hidden">
+<div class="bg-teal-200 dark:bg-teal-600 h-3 rounded-full" style="width: 0%"></div>
+</div>
+<p class="text-xs text-text-muted-light dark:text-text-muted-dark">Anda memiliki akses unlimited untuk model ini.</p>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<h4 class="font-semibold text-text-light dark:text-white">Owlie Chat</h4>
+<span class="text-sm font-bold text-primary">0 <span class="text-text-muted-light dark:text-text-muted-dark font-normal">/ ∞</span></span>
+</div>
+<div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 mb-2 overflow-hidden">
+<div class="bg-teal-200 dark:bg-teal-600 h-3 rounded-full" style="width: 0%"></div>
+</div>
+<p class="text-xs text-text-muted-light dark:text-text-muted-dark">Anda memiliki akses unlimited untuk model ini.</p>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<h4 class="font-semibold text-text-light dark:text-white">Owlie Thinking</h4>
+<span class="text-sm font-bold text-primary">0 <span class="text-text-muted-light dark:text-text-muted-dark font-normal">/ ∞</span></span>
+</div>
+<div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 mb-2 overflow-hidden">
+<div class="bg-teal-200 dark:bg-teal-600 h-3 rounded-full" style="width: 0%"></div>
+</div>
+<p class="text-xs text-text-muted-light dark:text-text-muted-dark">Anda memiliki akses unlimited untuk model ini.</p>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<h4 class="font-semibold text-text-light dark:text-white">Owlie Max</h4>
+<span class="text-sm font-bold text-primary">1 <span class="text-text-muted-light dark:text-text-muted-dark font-normal">/ ∞</span></span>
+</div>
+<div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 mb-2 overflow-hidden">
+<div class="bg-teal-200 dark:bg-teal-600 h-3 rounded-full" style="width: 2%"></div>
+</div>
+<p class="text-xs text-text-muted-light dark:text-text-muted-dark">Anda memiliki akses unlimited untuk model ini.</p>
+</div>
+</div>
+</div>
+<div class="bg-[#3A3836] dark:bg-gray-900 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg transition-all duration-300">
+<div class="text-center sm:text-left">
+<h3 class="text-xl font-bold text-white mb-2">Upgrade Plan Anda</h3>
+<p class="text-gray-300 text-sm leading-relaxed max-w-lg">
+                        Dapatkan akses ke model AI yang lebih canggih, kuota lebih besar, dan prioritas support dengan Taxindo Prime MAX.
+                    </p>
+</div>
+<button class="bg-primary hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 whitespace-nowrap w-full sm:w-auto transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-[#3A3836]">
+                    Lihat Pricing
+                </button>
+</div>
+</div>
+</div>
+<button class="fixed bottom-6 right-6 p-3 bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-110 transition-transform z-50" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-icons-round block dark:hidden">dark_mode</span>
+<span class="material-icons-round hidden dark:block">light_mode</span>
+</button>
+
+</body></html>

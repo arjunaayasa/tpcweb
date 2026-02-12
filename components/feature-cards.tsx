@@ -95,7 +95,7 @@ export default function FeatureCards({ settings }: FeatureCardsProps) {
     <section id="features" className="py-20 bg-neutral-light">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12 animate-fade-up">
-          <h2 className="text-4xl md:text-5xl font-bold text-text-dark">
+          <h2 className="text-4xl md:text-5xl font-bold font-playfair text-text-dark">
             {(() => {
               const title = settings?.title ?? 'Fitur Lengkap TPC AI';
               const parts = title.split('Lengkap');
@@ -133,63 +133,56 @@ export default function FeatureCards({ settings }: FeatureCardsProps) {
             const hoverText = isStatic
               ? ''
               : feature.theme?.hoverText ??
-                'group-hover:text-white group-active:text-white';
+              'group-hover:text-white group-active:text-white';
             const hoverMuted = isStatic
               ? ''
               : feature.theme?.hoverMuted ??
-                'group-hover:text-white/80 group-active:text-white/80';
+              'group-hover:text-white/80 group-active:text-white/80';
             const hoverIcon = isStatic
               ? ''
               : feature.theme?.hoverIcon ??
-                'group-hover:bg-white/15 group-hover:text-white group-active:bg-white/15 group-active:text-white';
+              'group-hover:bg-white/15 group-hover:text-white group-active:bg-white/15 group-active:text-white';
             return (
               <div
                 key={feature.title}
-                className={`relative overflow-hidden rounded-3xl ${baseBgClass} p-8 shadow-lg border-2 transition-transform duration-300 ${hoverClass} ${animationClass} ${
-                  feature.featured ? 'md:p-10' : ''
-                } ${feature.gridClass ?? ''} ${feature.theme?.border ?? 'border-primary/30'} ${
-                  groupClass
-                } ${isStatic ? 'cursor-default' : 'cursor-pointer'}`}
+                className={`relative overflow-hidden rounded-3xl ${baseBgClass} p-8 shadow-lg border-2 transition-transform duration-300 ${hoverClass} ${animationClass} ${feature.featured ? 'md:p-10' : ''
+                  } ${feature.gridClass ?? ''} ${feature.theme?.border ?? 'border-primary/30'} ${groupClass
+                  } ${isStatic ? 'cursor-default' : 'cursor-pointer'}`}
                 style={{ animationDelay: `${index * 140}ms` }}
               >
                 {isStatic ? null : (
                   <div
-                    className={`absolute inset-0 z-0 origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 group-active:scale-x-100 ${
-                      feature.theme?.fill ?? 'bg-primary'
-                    }`}
+                    className={`absolute inset-0 z-0 origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 group-active:scale-x-100 ${feature.theme?.fill ?? 'bg-primary'
+                      }`}
                   />
                 )}
 
                 <div className="relative z-10">
                   <div className="flex items-center gap-4 mb-5">
                     <div
-                      className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-colors ${
-                        feature.theme?.icon ?? 'bg-primary/10 text-primary'
-                      } ${hoverIcon}`}
+                      className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-colors ${feature.theme?.icon ?? 'bg-primary/10 text-primary'
+                        } ${hoverIcon}`}
                     >
                       <CardIcon className="h-6 w-6" />
                     </div>
                     <div>
                       <p
-                        className={`text-xs uppercase tracking-[0.2em] transition-colors ${
-                          feature.theme?.label ?? 'text-secondary'
-                        } ${hoverText}`}
+                        className={`text-xs uppercase tracking-[0.2em] transition-colors ${feature.theme?.label ?? 'text-secondary'
+                          } ${hoverText}`}
                       >
                         Fitur
                       </p>
                       <h3
-                        className={`text-2xl md:text-3xl font-semibold transition-colors ${headingBase} ${
-                          hoverText
-                        }`}
+                        className={`text-2xl md:text-3xl font-semibold transition-colors ${headingBase} ${hoverText
+                          }`}
                       >
                         {feature.title}
                       </h3>
                     </div>
                   </div>
                   <p
-                    className={`text-base md:text-lg max-w-2xl transition-colors ${bodyBase} ${
-                      hoverMuted
-                    }`}
+                    className={`text-base md:text-lg max-w-2xl transition-colors ${bodyBase} ${hoverMuted
+                      }`}
                   >
                     {feature.description}
                   </p>
