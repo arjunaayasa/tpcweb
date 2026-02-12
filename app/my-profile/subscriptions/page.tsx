@@ -5,63 +5,14 @@ import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import { fetchAuthProfile } from '@/lib/sso';
 import { getSiteSettings } from '@/lib/site-settings';
+import { getPlanCycle, getBillingWindow, formatDate } from '@/lib/billing';
+import { prisma } from '@/lib/prisma';
+import ProfileCard from '../components/profile-card';
+import QuickAccess from '../components/quick-access';
+import HelpSupport from '../components/help-support';
 
-type BillingCycle = 'MONTHLY' | 'ANNUAL';
-
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
-
-const normalizeCycle = (value: unknown): BillingCycle | null => {
-  if (!value) return null;
-  const text = String(value).toLowerCase();
-  if (text.includes('year') || text.includes('annual') || text.includes('tahun')) return 'ANNUAL';
-  if (text.includes('month') || text.includes('monthly') || text.includes('bulan')) return 'MONTHLY';
-  return null;
-};
-
-const getPlanCycle = (
-  plan: { limits?: Record<string, unknown> | null } | null | undefined,
-): BillingCycle => {
-  const limits = (plan?.limits ?? undefined) as Record<string, unknown> | undefined;
-  const candidates = [
-    limits?.billingCycle,
-    limits?.billing_interval,
-    limits?.billingInterval,
-    limits?.interval,
-    limits?.period,
-    limits?.cycle,
-  ];
-
-  for (const candidate of candidates) {
-    const normalized = normalizeCycle(candidate);
-    if (normalized) return normalized;
-  }
-
-  return 'MONTHLY';
-};
-
-const addMonths = (date: Date, months: number) => {
-  const base = new Date(date);
-  const day = base.getDate();
-  base.setDate(1);
-  base.setMonth(base.getMonth() + months);
-  const lastDay = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
-  base.setDate(Math.min(day, lastDay));
-  return base;
-};
-
-const getBillingWindow = (start: Date, cycle: BillingCycle, now: Date) => {
-  const increment = cycle === 'ANNUAL' ? 12 : 1;
-  let currentStart = new Date(start);
-  let next = addMonths(currentStart, increment);
-
-  while (next <= now) {
-    currentStart = next;
-    next = addMonths(currentStart, increment);
-  }
-
-  return { currentStart, next };
-};
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 export default async function ManageSubscriptionsPage() {
   const headerList = await headers();
@@ -74,153 +25,239 @@ export default async function ManageSubscriptionsPage() {
   const settings = await getSiteSettings(['footer']);
   const { user, plan } = profile;
 
+  // Plan Labels
+  const planLabels: Record<string, string> = {
+    FREE: 'Free',
+    BASIC: 'Basic',
+    PLUS: 'Plus',
+    MAX: 'Max',
+  };
+
+  const userPlan = user.plan ?? 'FREE';
+  const planLabel = planLabels[userPlan] ?? (userPlan);
+  const isFree = userPlan === 'FREE';
+
+  // Billing Logic
   const cycle = getPlanCycle(plan ?? null);
   const now = new Date();
   const startDate = user.createdAt ? new Date(user.createdAt) : now;
-  const { currentStart, next } = getBillingWindow(startDate, cycle, now);
+  const { next } = getBillingWindow(startDate, cycle, now);
 
-  const periodLabel = `${formatDate(currentStart)} - ${formatDate(next)}`;
-  const cycleLabel = cycle === 'ANNUAL' ? 'Tahunan' : 'Bulanan';
-  const cycleDesc = cycle === 'ANNUAL' ? 'Ditagih per tahun' : 'Ditagih per bulan';
+  const intervalParam = cycle === 'ANNUAL' ? 'YEARLY' : 'MONTHLY';
 
-  const invoices: Array<{ id: string; period: string; billedAt: string; status: string }> = [];
-  const increment = cycle === 'ANNUAL' ? 12 : 1;
-  let cursor = new Date(currentStart);
+  // Renew Logic
+  const msUntilRenew = next.getTime() - now.getTime();
+  const daysUntilRenew = Math.ceil(msUntilRenew / (1000 * 60 * 60 * 24));
+  const renewEnabled = !isFree && daysUntilRenew <= 7;
+  const renewOpenDate = new Date(next.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  for (let i = 0; i < 3; i += 1) {
-    const prevStart = addMonths(cursor, -increment);
-    if (prevStart >= startDate && cursor <= now) {
-      invoices.push({
-        id: `INV-${cursor.getFullYear()}${String(cursor.getMonth() + 1).padStart(2, '0')}`,
-        period: `${formatDate(prevStart)} - ${formatDate(cursor)}`,
-        billedAt: formatDate(cursor),
-        status: 'Lunas',
-      });
-    }
-    cursor = prevStart;
-  }
+  // Fetch real invoices from database
+  const invoices = await prisma.invoice.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
+
+  // Get latest invoice price for display
+  const latestInvoice = invoices[0];
+  const planPrice = latestInvoice
+    ? formatCurrency(latestInvoice.amount)
+    : (isFree ? 'Rp 0' : '-');
 
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col bg-neutral-light text-text-dark transition-colors duration-300">
       <Navbar />
-      <div className="flex-1 bg-neutral-light">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16 pt-28">
-          <section className="flex flex-col gap-3">
-            <p className="text-xs uppercase tracking-[0.4em] text-secondary">Manage Subscription</p>
-            <div className="flex flex-wrap items-end justify-between gap-4">
+
+      <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-8 pt-52 mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
+          {/* Left Column (Sidebar) */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <ProfileCard user={user} planLabel={planLabel} />
+            <QuickAccess />
+            <HelpSupport />
+          </div>
+
+          {/* Right Column (Content) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-semibold text-text-dark">Kelola Langganan</h1>
-                <p className="text-sm text-text-dark/60">
-                  Detail tagihan, siklus pembayaran, dan status paket Anda.
-                </p>
+                <h1 className="text-3xl font-bold text-gray-900">Kelola Langganan</h1>
+                <p className="text-gray-500 mt-1">Atur paket langganan dan metode pembayaran Anda.</p>
               </div>
               <Link
                 href="/my-profile"
-                className="rounded-full border border-primary/30 px-5 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:text-secondary"
+                className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
               >
-                Kembali ke Portal
+                <span className="material-icons-round text-base">arrow_back</span>
+                Kembali
               </Link>
             </div>
-          </section>
 
-          <section className="grid gap-6 lg:grid-cols-[1.3fr,1fr]">
-            <div className="rounded-3xl bg-white p-6 shadow-lg">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-text-dark">Ringkasan Langganan</h2>
-                  <p className="text-sm text-text-dark/60">Akun: {user.email}</p>
+            {/* Active Plan Card */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 sm:p-8 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-gray-300 text-sm font-medium mb-1">Paket Saat Ini</p>
+                    <h2 className="text-3xl font-bold tracking-tight">{planLabel}</h2>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${!isFree ? 'bg-green-500/20 text-green-300' : 'bg-gray-600/50 text-gray-300'
+                    }`}>
+                    {isFree ? 'Free' : 'Aktif'}
+                  </span>
                 </div>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                  {user.plan ?? 'FREE'}
-                </span>
+                {!isFree && (
+                  <div className="mt-6 flex flex-wrap gap-6 text-sm">
+                    <div>
+                      <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Tagihan</p>
+                      <p className="font-semibold text-xl">{planPrice} <span className="text-sm font-normal text-gray-400">/ {cycle === 'ANNUAL' ? 'tahun' : 'bulan'}</span></p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Tagihan Berikutnya</p>
+                      <p className="font-semibold text-white">{formatDate(next)}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-neutral-light p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-text-dark/40">Siklus Penagihan</p>
-                  <p className="mt-2 text-lg font-semibold text-text-dark">{cycleLabel}</p>
-                  <p className="text-xs text-text-dark/60">{cycleDesc}</p>
-                </div>
-                <div className="rounded-2xl bg-neutral-light p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-text-dark/40">Tagihan Berikutnya</p>
-                  <p className="mt-2 text-lg font-semibold text-text-dark">{formatDate(next)}</p>
-                  <p className="text-xs text-text-dark/60">Periode berjalan: {periodLabel}</p>
-                </div>
-                <div className="rounded-2xl bg-neutral-light p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-text-dark/40">Status</p>
-                  <p className="mt-2 text-lg font-semibold text-secondary">Aktif</p>
-                  <p className="text-xs text-text-dark/60">Pembayaran otomatis sesuai kontrak.</p>
-                </div>
-                <div className="rounded-2xl bg-neutral-light p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-text-dark/40">Metode Pembayaran</p>
-                  <p className="mt-2 text-lg font-semibold text-text-dark">Belum diatur</p>
-                  <p className="text-xs text-text-dark/60">Tambahkan metode untuk tagihan otomatis.</p>
-                </div>
-              </div>
-            </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-lg">
-              <h2 className="text-lg font-semibold text-text-dark">Aksi Cepat</h2>
-              <div className="mt-4 space-y-3 text-sm text-text-dark/70">
-                <button
-                  type="button"
-                  className="w-full rounded-2xl border border-primary/20 px-4 py-3 text-left font-semibold text-primary transition hover:border-secondary hover:text-secondary"
-                >
-                  Upgrade / Downgrade Plan
-                </button>
-                <button
-                  type="button"
-                  className="w-full rounded-2xl border border-primary/20 px-4 py-3 text-left font-semibold text-primary transition hover:border-secondary hover:text-secondary"
-                >
-                  Perbarui Metode Pembayaran
-                </button>
-                <button
-                  type="button"
-                  className="w-full rounded-2xl border border-primary/20 px-4 py-3 text-left font-semibold text-primary transition hover:border-secondary hover:text-secondary"
-                >
-                  Hubungi Tim Billing
-                </button>
-              </div>
-              <p className="mt-4 text-xs text-text-dark/50">
-                Untuk perubahan kontrak tahunan/bulanan, silakan hubungi tim billing.
-              </p>
-            </div>
-          </section>
+              <div className="p-6 sm:p-8 bg-white">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link
+                    href="/pricing"
+                    className="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl transition-all"
+                  >
+                    <span className="material-icons-round text-sm">upgrade</span>
+                    {isFree ? 'Upgrade Plan' : 'Ganti Paket (Upgrade/Downgrade)'}
+                  </Link>
 
-          <section className="rounded-3xl bg-white p-6 shadow-lg">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-text-dark">Riwayat Tagihan</h2>
-                <p className="text-sm text-text-dark/60">
-                  Tagihan sebelumnya berdasarkan periode aktif Anda.
+                  {!isFree && (
+                    renewEnabled ? (
+                      <Link
+                        href={`/payment?plan=${userPlan}&interval=${intervalParam}`}
+                        className="flex-1 flex items-center justify-center gap-2 border border-secondary text-secondary hover:bg-secondary/5 font-bold py-3 px-6 rounded-xl transition-all"
+                      >
+                        <span className="material-icons-round text-sm">autorenew</span>
+                        Perpanjang Langganan
+                      </Link>
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-400 font-bold py-3 px-6 rounded-xl cursor-not-allowed bg-gray-50" title={`Tersedia mulai ${formatDate(renewOpenDate)}`}>
+                        <span className="material-icons-round text-sm">lock_clock</span>
+                        Perpanjang (H-7)
+                      </div>
+                    )
+                  )}
+                </div>
+                <p className="text-center text-xs text-gray-400 mt-4">
+                  Hubungi <a href="mailto:support@taxindo.ai" className="text-primary hover:underline">Support</a> jika Anda butuh bantuan pembatalan.
                 </p>
               </div>
-              <button
-                type="button"
-                className="rounded-full border border-primary/30 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:text-secondary"
-              >
-                Unduh Semua Invoice
-              </button>
             </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {invoices.length ? (
-                invoices.map((invoice) => (
-                  <div key={invoice.id} className="rounded-2xl border border-primary/10 p-4">
-                    <p className="text-xs uppercase tracking-[0.3em] text-text-dark/40">{invoice.id}</p>
-                    <p className="mt-2 text-sm font-semibold text-text-dark">{invoice.period}</p>
-                    <p className="text-xs text-text-dark/60">Tanggal tagih: {invoice.billedAt}</p>
-                    <p className="mt-3 inline-flex rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">
-                      {invoice.status}
-                    </p>
+
+            {/* Payment Method & Billing Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-4 text-gray-900">
+                  <span className="material-icons-round text-gray-400">credit_card</span>
+                  <h3 className="font-bold text-lg">Metode Pembayaran</h3>
+                </div>
+                {!isFree ? (
+                  <div className="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <span className="material-icons-round text-blue-600">payment</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">Online Payment</p>
+                      <p className="text-xs text-gray-500">via Midtrans</p>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-text-dark/60">Belum ada invoice tersedia.</p>
-              )}
+                ) : (
+                  <p className="text-sm text-gray-500">Tidak ada metode pembayaran aktif.</p>
+                )}
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-4 text-gray-900">
+                  <span className="material-icons-round text-gray-400">event_repeat</span>
+                  <h3 className="font-bold text-lg">Siklus Penagihan</h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  {isFree ? 'Anda menggunakan paket gratis.' : `Ditagih secara otomatis setiap ${cycle === 'ANNUAL' ? 'tahun' : 'bulan'}.`}
+                </p>
+                {!isFree && (
+                  <div className="mt-3">
+                    <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
+                      {cycle === 'ANNUAL' ? 'YEARLY' : 'MONTHLY'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </section>
+
+            {/* Invoice History */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-6 text-gray-900">
+                <span className="material-icons-round text-gray-400">receipt_long</span>
+                <h3 className="font-bold text-lg">Riwayat Tagihan</h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">No. Invoice</th>
+                      <th className="px-4 py-3 font-semibold">Tanggal</th>
+                      <th className="px-4 py-3 font-semibold">Paket</th>
+                      <th className="px-4 py-3 font-semibold">Jumlah</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {invoices.length > 0 ? (
+                      invoices.map((invoice) => (
+                        <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-4 py-4 font-medium text-gray-900">{invoice.invoiceNumber}</td>
+                          <td className="px-4 py-4 text-gray-500">{formatDate(invoice.createdAt)}</td>
+                          <td className="px-4 py-4 text-gray-700">{planLabels[invoice.plan] ?? invoice.plan}</td>
+                          <td className="px-4 py-4 text-gray-900">{formatCurrency(invoice.amount)}</td>
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${invoice.status === 'PAID'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                              {invoice.status === 'PAID' ? 'Lunas' : invoice.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <Link
+                              href={`/invoice/${invoice.id}`}
+                              className="text-primary hover:text-orange-700 font-medium text-xs"
+                            >
+                              Lihat Detail
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          Belum ada riwayat tagihan.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
       <Footer settings={settings.footer} />
     </main>
   );
 }
+

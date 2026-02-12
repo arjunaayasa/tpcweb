@@ -3,6 +3,7 @@
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-playfair: var(--font-playfair);
 
   /* New Palette Extensions */
   --color-primary: var(--tpc-primary);
@@ -72,6 +73,7 @@ body::-webkit-scrollbar-thumb:hover,
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -83,6 +85,7 @@ body::-webkit-scrollbar-thumb:hover,
     opacity: 0;
     transform: translateY(-16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -94,6 +97,7 @@ body::-webkit-scrollbar-thumb:hover,
     opacity: 0;
     transform: translateX(-24px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -105,6 +109,7 @@ body::-webkit-scrollbar-thumb:hover,
     opacity: 0;
     transform: translateX(24px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -115,9 +120,11 @@ body::-webkit-scrollbar-thumb:hover,
   0% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
+
   100% {
     transform: translateY(0);
   }
@@ -128,6 +135,7 @@ body::-webkit-scrollbar-thumb:hover,
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -139,6 +147,7 @@ body::-webkit-scrollbar-thumb:hover,
     opacity: 1;
     transform: translateY(0);
   }
+
   to {
     opacity: 0;
     transform: translateY(-6px);
@@ -149,9 +158,11 @@ body::-webkit-scrollbar-thumb:hover,
   0% {
     transform: scaleX(0);
   }
+
   60% {
     transform: scaleX(1);
   }
+
   100% {
     transform: scaleX(1);
   }
@@ -161,9 +172,11 @@ body::-webkit-scrollbar-thumb:hover,
   0% {
     box-shadow: 0 0 0 0 rgba(45, 137, 200, 0.25);
   }
+
   70% {
     box-shadow: 0 0 0 6px rgba(45, 137, 200, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(45, 137, 200, 0);
   }
@@ -213,6 +226,7 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-fade-up,
   .animate-fade-down,
   .animate-slide-in-left,

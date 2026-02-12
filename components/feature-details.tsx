@@ -47,7 +47,7 @@ export default function FeatureDetails({ settings }: FeatureDetailsProps) {
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-secondary">
                   {section.name}
                 </p>
-                <h3 className="text-3xl md:text-4xl font-bold text-text-dark">
+                <h3 className="text-3xl md:text-4xl font-bold font-playfair text-text-dark">
                   {section.headline}
                 </h3>
                 <p className="text-lg text-text-dark/75">

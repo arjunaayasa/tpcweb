@@ -169,6 +169,7 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
 
           <a href="/#products" className={`cursor-pointer transition-colors ${linkHover}`}>Produk</a>
           <a href="/#testimonials" className={`cursor-pointer transition-colors ${linkHover}`}>Testimoni</a>
+          <a href="/#pricing" className={`cursor-pointer transition-colors ${linkHover}`}>Harga</a>
           <a href="/#faq" className={`cursor-pointer transition-colors ${linkHover}`}>Tanya Jawab</a>
         </div>
 

@@ -111,6 +111,7 @@ export default function AdminSubscriptionsPage() {
   const [pricingForm, setPricingForm] = useState<Record<string, { monthly: string; yearly: string }>>({});
   const [pricingStatus, setPricingStatus] = useState('');
   const [isSavingPricing, setIsSavingPricing] = useState(false);
+  const [isDeletingPrice, setIsDeletingPrice] = useState('');
 
   const [changeForm, setChangeForm] = useState({
     email: '',
@@ -148,8 +149,31 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
+  const loadPrices = async () => {
+    try {
+      const res = await fetch('/api/billing/plan-prices', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = (await res.json()) as { prices: Array<{ plan: string; interval: string; amount: number }> };
+      const prices = data.prices ?? [];
+      const form: Record<string, { monthly: string; yearly: string }> = {};
+      for (const p of prices) {
+        if (!form[p.plan]) form[p.plan] = { monthly: '', yearly: '' };
+        if (p.interval === 'MONTHLY') form[p.plan].monthly = String(p.amount);
+        if (p.interval === 'YEARLY') form[p.plan].yearly = String(p.amount);
+      }
+      // Ensure all plan keys exist
+      for (const opt of planOptions) {
+        if (!form[opt.value]) form[opt.value] = { monthly: '', yearly: '' };
+      }
+      setPricingForm(form);
+    } catch {
+      // silently fail, user can reload
+    }
+  };
+
   useEffect(() => {
     void loadPlans();
+    void loadPrices();
   }, []);
 
   useEffect(() => {
@@ -225,12 +249,64 @@ export default function AdminSubscriptionsPage() {
     setIsSavingPricing(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setPricingStatus('Harga paket berhasil disimpan sebagai referensi.');
+      const items: Array<{ plan: string; interval: string; amount: number }> = [];
+      for (const [planKey, vals] of Object.entries(pricingForm)) {
+        if (vals.monthly && Number(vals.monthly) > 0) {
+          items.push({ plan: planKey, interval: 'MONTHLY', amount: Number(vals.monthly) });
+        }
+        if (vals.yearly && Number(vals.yearly) > 0) {
+          items.push({ plan: planKey, interval: 'YEARLY', amount: Number(vals.yearly) });
+        }
+      }
+
+      if (items.length === 0) {
+        setPricingStatus('Tidak ada harga yang diisi.');
+        return;
+      }
+
+      const res = await fetch('/api/billing/plan-prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(items),
+      });
+
+      if (!res.ok) {
+        setPricingStatus(res.status === 401 ? 'Tidak memiliki akses.' : 'Gagal menyimpan harga paket.');
+        return;
+      }
+
+      setPricingStatus('Harga paket berhasil disimpan.');
+      void loadPrices();
     } catch {
       setPricingStatus('Gagal menyimpan harga paket.');
     } finally {
       setIsSavingPricing(false);
+    }
+  };
+
+  const handleDeletePrice = async (planKey: string, interval: 'MONTHLY' | 'YEARLY') => {
+    const deleteId = `${planKey}-${interval}`;
+    setIsDeletingPrice(deleteId);
+    try {
+      const res = await fetch(`/api/billing/plan-prices?plan=${planKey}&interval=${interval}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setPricingForm((prev) => ({
+          ...prev,
+          [planKey]: {
+            ...(prev[planKey] ?? { monthly: '', yearly: '' }),
+            [interval === 'MONTHLY' ? 'monthly' : 'yearly']: '',
+          },
+        }));
+        setPricingStatus(`Harga ${planKey} ${interval.toLowerCase()} berhasil dihapus.`);
+      }
+    } catch {
+      setPricingStatus('Gagal menghapus harga.');
+    } finally {
+      setIsDeletingPrice('');
     }
   };
 
@@ -271,34 +347,34 @@ export default function AdminSubscriptionsPage() {
                     </span>
                   </div>
                   <div className={`mt-3 space-y-3 text-xs ${theme.text}`}>
-                  <div>
-                    <p className={`text-[10px] uppercase tracking-[0.3em] ${theme.meta}`}>Model</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(plan.allowedModels ?? []).map((model) => (
-                        <span
-                          key={model}
-                          className={`rounded-full border px-2 py-1 text-[11px] ${theme.chip}`}
-                        >
-                          {modelLabelMap[model] ?? model}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {plan.limits ? (
                     <div>
-                      <p className={`text-[10px] uppercase tracking-[0.3em] ${theme.meta}`}>Batas</p>
-                      <div className={`mt-2 space-y-1 border-t pt-2 ${theme.divider}`}>
-                        {Object.entries(plan.limits).map(([limitKey, value]) => (
-                          <div key={limitKey} className="flex items-center justify-between gap-2">
-                            <span>{formatKeyLabel(limitKey)}</span>
-                            <span className={`font-semibold ${theme.title}`}>
-                              {formatQuotaValue(value)}
-                            </span>
-                          </div>
+                      <p className={`text-[10px] uppercase tracking-[0.3em] ${theme.meta}`}>Model</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(plan.allowedModels ?? []).map((model) => (
+                          <span
+                            key={model}
+                            className={`rounded-full border px-2 py-1 text-[11px] ${theme.chip}`}
+                          >
+                            {modelLabelMap[model] ?? model}
+                          </span>
                         ))}
                       </div>
                     </div>
-                  ) : null}
+                    {plan.limits ? (
+                      <div>
+                        <p className={`text-[10px] uppercase tracking-[0.3em] ${theme.meta}`}>Batas</p>
+                        <div className={`mt-2 space-y-1 border-t pt-2 ${theme.divider}`}>
+                          {Object.entries(plan.limits).map(([limitKey, value]) => (
+                            <div key={limitKey} className="flex items-center justify-between gap-2">
+                              <span>{formatKeyLabel(limitKey)}</span>
+                              <span className={`font-semibold ${theme.title}`}>
+                                {formatQuotaValue(value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               );
@@ -377,26 +453,50 @@ export default function AdminSubscriptionsPage() {
             <div key={key} className="rounded-2xl border border-primary/10 bg-neutral-light p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-text-dark">{key}</p>
-                <span className="text-xs text-text-dark/50">Harga / bulan & tahunan</span>
+                <span className="text-xs text-text-dark/50">Harga / bulan &amp; tahunan</span>
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <label className="flex flex-col gap-2 text-xs text-text-dark/70">
                   Bulanan (IDR)
-                  <input
-                    className="rounded-xl border border-primary/20 bg-white px-3 py-2 text-sm text-text-dark"
-                    placeholder="Contoh: 299000"
-                    value={pricingForm[key]?.monthly ?? ''}
-                    onChange={(event) => handlePricingChange(key, 'monthly', event.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-xl border border-primary/20 bg-white px-3 py-2 text-sm text-text-dark"
+                      placeholder="Contoh: 299000"
+                      value={pricingForm[key]?.monthly ?? ''}
+                      onChange={(event) => handlePricingChange(key, 'monthly', event.target.value)}
+                    />
+                    {pricingForm[key]?.monthly ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePrice(key, 'MONTHLY')}
+                        disabled={isDeletingPrice === `${key}-MONTHLY`}
+                        className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-500 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        ✕
+                      </button>
+                    ) : null}
+                  </div>
                 </label>
                 <label className="flex flex-col gap-2 text-xs text-text-dark/70">
                   Tahunan (IDR)
-                  <input
-                    className="rounded-xl border border-primary/20 bg-white px-3 py-2 text-sm text-text-dark"
-                    placeholder="Contoh: 2990000"
-                    value={pricingForm[key]?.yearly ?? ''}
-                    onChange={(event) => handlePricingChange(key, 'yearly', event.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-xl border border-primary/20 bg-white px-3 py-2 text-sm text-text-dark"
+                      placeholder="Contoh: 2990000"
+                      value={pricingForm[key]?.yearly ?? ''}
+                      onChange={(event) => handlePricingChange(key, 'yearly', event.target.value)}
+                    />
+                    {pricingForm[key]?.yearly ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePrice(key, 'YEARLY')}
+                        disabled={isDeletingPrice === `${key}-YEARLY`}
+                        className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-500 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        ✕
+                      </button>
+                    ) : null}
+                  </div>
                 </label>
               </div>
             </div>

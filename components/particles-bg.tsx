@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
-export default function ParticlesBg() {
+const ParticlesBg = () => {
   const [init, setInit] = useState(false);
 
   useEffect(() => {
@@ -91,4 +91,6 @@ export default function ParticlesBg() {
   }
 
   return null;
-}
+};
+
+export default React.memo(ParticlesBg);
