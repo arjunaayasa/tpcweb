@@ -8,7 +8,31 @@ export const getAuthBaseOrLocal = () => {
   return 'http://localhost:3000';
 };
 
+/** Static fallback — used when we cannot await the DB lookup. */
 export const AUTH_BASE_URL = getAuthBaseOrLocal();
+
+/**
+ * Dynamic backend URL — checks the admin-configured `redirects.backendUrl`
+ * in the DB first, then falls back to the environment variable / localhost.
+ * Result is cached per-request via Next.js `fetch` de-duplication.
+ */
+export const getBackendUrl = async (): Promise<string> => {
+  try {
+    // Lazy-import to avoid circular dependency with prisma
+    const { prisma } = await import('@/lib/prisma');
+    const row = await prisma.siteSetting.findUnique({ where: { key: 'redirects' } });
+    if (row && row.value && typeof row.value === 'object') {
+      const val = row.value as Record<string, unknown>;
+      const dbUrl = val.backendUrl as string | undefined;
+      if (dbUrl && (dbUrl.startsWith('https://') || dbUrl.startsWith('http://'))) {
+        return dbUrl;
+      }
+    }
+  } catch {
+    // DB not available — fall through
+  }
+  return AUTH_BASE_URL;
+};
 
 export const SSO_APP_ID = process.env.SSO_APP_ID ?? 'tpc-admin';
 export const SSO_REDIRECT_URI =
@@ -71,8 +95,9 @@ const getCookieValue = (cookieHeader: string | null, name: string) => {
   return undefined;
 };
 
-export const getSSOLoginUrl = (state?: string) => {
-  const url = new URL('/login', AUTH_BASE_URL);
+export const getSSOLoginUrl = async (state?: string) => {
+  const base = await getBackendUrl();
+  const url = new URL('/login', base);
   url.searchParams.set('app_id', SSO_APP_ID);
   url.searchParams.set('redirect_uri', SSO_REDIRECT_URI);
   if (state) {
@@ -81,8 +106,9 @@ export const getSSOLoginUrl = (state?: string) => {
   return url.toString();
 };
 
-export const getSSORegisterUrl = (state?: string) => {
-  const url = new URL('/register', AUTH_BASE_URL);
+export const getSSORegisterUrl = async (state?: string) => {
+  const base = await getBackendUrl();
+  const url = new URL('/register', base);
   url.searchParams.set('app_id', SSO_APP_ID);
   url.searchParams.set('redirect_uri', SSO_REDIRECT_URI);
   if (state) {
@@ -91,8 +117,10 @@ export const getSSORegisterUrl = (state?: string) => {
   return url.toString();
 };
 
-export const getSSOLogoutUrl = () =>
-  new URL('/api/auth/logout', AUTH_BASE_URL).toString();
+export const getSSOLogoutUrl = async () => {
+  const base = await getBackendUrl();
+  return new URL('/api/auth/logout', base).toString();
+};
 
 export const fetchAuthMe = async (cookieHeader: string | null) => {
   const state = await fetchAuthState(cookieHeader);
@@ -105,7 +133,8 @@ export const fetchAuthState = async (cookieHeader: string | null) => {
     return null;
   }
 
-  const res = await fetch(`${AUTH_BASE_URL}/api/auth/me`, {
+  const base = await getBackendUrl();
+  const res = await fetch(`${base}/api/auth/me`, {
     headers: {
       cookie: `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`,
     },
@@ -130,7 +159,8 @@ export const fetchAuthProfile = async (cookieHeader: string | null) => {
     return null;
   }
 
-  const res = await fetch(`${AUTH_BASE_URL}/api/profile`, {
+  const base = await getBackendUrl();
+  const res = await fetch(`${base}/api/profile`, {
     headers: {
       cookie: `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`,
     },

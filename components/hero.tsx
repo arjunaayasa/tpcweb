@@ -12,15 +12,10 @@ type HeroProps = {
   redirects?: SiteSettings['redirects'];
 };
 
-<<<<<<< HEAD
-export default function Hero({ settings, redirects }: HeroProps) {
-  const placeholders =
-=======
 type HeroMode = 'chat' | 'search';
 
-export default function Hero({ settings }: HeroProps) {
+export default function Hero({ settings, redirects }: HeroProps) {
   const chatPlaceholders =
->>>>>>> 100e1db3b81738461e957aa0de35dfc626952a67
     settings?.placeholders?.length ? settings.placeholders : [
       'Tanya tentang batas waktu pelaporan SPT?',
       'Bagaimana cara menghitung PPh 21 karyawan?',
@@ -41,12 +36,10 @@ export default function Hero({ settings }: HeroProps) {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
 
-<<<<<<< HEAD
   const owlieChatUrl = redirects?.owlieChat || '#';
   const taxKnowledgeUrl = redirects?.taxKnowledge || '#';
-=======
+
   const currentPlaceholders = mode === 'chat' ? chatPlaceholders : searchPlaceholders;
->>>>>>> 100e1db3b81738461e957aa0de35dfc626952a67
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -54,7 +47,7 @@ export default function Hero({ settings }: HeroProps) {
     }, 2600);
 
     return () => clearInterval(interval);
-  }, [currentPlaceholders.length]); // Reset interval when placeholders change (mode change)
+  }, [currentPlaceholders.length]);
 
   // Reset input and placeholder index when mode changes
   useEffect(() => {
@@ -62,20 +55,27 @@ export default function Hero({ settings }: HeroProps) {
     setPlaceholderIndex(0);
   }, [mode]);
 
-  const handleChatSubmit = () => {
-    if (!owlieChatUrl || owlieChatUrl === '#') return;
+  const handleSubmit = () => {
     const query = inputValue.trim();
-    // Build URL with optional query param
-    const url = query
-      ? `${owlieChatUrl}${owlieChatUrl.includes('?') ? '&' : '?'}q=${encodeURIComponent(query)}`
-      : owlieChatUrl;
-    window.open(url, '_blank', 'noopener');
+    if (mode === 'chat') {
+      if (!owlieChatUrl || owlieChatUrl === '#') return;
+      const url = query
+        ? `${owlieChatUrl}${owlieChatUrl.includes('?') ? '&' : '?'}q=${encodeURIComponent(query)}`
+        : owlieChatUrl;
+      window.open(url, '_blank', 'noopener');
+    } else {
+      if (!taxKnowledgeUrl || taxKnowledgeUrl === '#') return;
+      const url = query
+        ? `${taxKnowledgeUrl}${taxKnowledgeUrl.includes('?') ? '&' : '?'}q=${encodeURIComponent(query)}`
+        : taxKnowledgeUrl;
+      window.open(url, '_blank', 'noopener');
+    }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleChatSubmit();
+      handleSubmit();
     }
   };
 
@@ -97,13 +97,6 @@ export default function Hero({ settings }: HeroProps) {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
           style={{ animationDelay: '240ms' }}
         >
-<<<<<<< HEAD
-          <a
-            href={owlieChatUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-xl hover:bg-secondary transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-lg min-w-[200px] justify-center"
-=======
           <button
             onClick={() => setMode('chat')}
             className={clsx(
@@ -112,19 +105,11 @@ export default function Hero({ settings }: HeroProps) {
                 ? "bg-primary text-white hover:bg-secondary"
                 : "bg-transparent text-primary border border-primary hover:bg-primary hover:text-white backdrop-blur-sm"
             )}
->>>>>>> 100e1db3b81738461e957aa0de35dfc626952a67
           >
             <MessageChatSquare className="w-6 h-6" />
             {settings?.ctaPrimary ?? 'Owlie Chat'}
-          </a>
+          </button>
 
-<<<<<<< HEAD
-          <a
-            href={taxKnowledgeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 bg-transparent text-primary border border-primary px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm font-semibold text-lg min-w-[200px] justify-center"
-=======
           <button
             onClick={() => setMode('search')}
             className={clsx(
@@ -133,11 +118,10 @@ export default function Hero({ settings }: HeroProps) {
                 ? "bg-secondary text-white"
                 : "bg-transparent text-secondary border border-secondary hover:bg-secondary hover:text-white backdrop-blur-sm"
             )}
->>>>>>> 100e1db3b81738461e957aa0de35dfc626952a67
           >
             <BookOpen01 className="w-6 h-6" />
             {settings?.ctaSecondary ?? 'Tax Knowledge AI'}
-          </a>
+          </button>
         </div>
 
         <div
@@ -157,33 +141,12 @@ export default function Hero({ settings }: HeroProps) {
             <label className="sr-only" htmlFor="hero-input">
               {mode === 'chat' ? 'Pertanyaan pajak' : 'Cari dokumen'}
             </label>
-<<<<<<< HEAD
-            <div className="flex-1 flex items-center gap-3">
-              <div className="flex-1 relative">
-                {inputValue.length === 0 ? (
-                  <span
-                    key={placeholderIndex}
-                    className="absolute left-0 top-0 text-sm text-text-dark/50 animate-fade-up"
-                  >
-                    {placeholders[placeholderIndex]}
-                  </span>
-                ) : null}
-                <textarea
-                  id="hero-chat-input"
-                  placeholder=""
-                  rows={3}
-                  value={inputValue}
-                  onChange={(event) => setInputValue(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none resize-none text-left align-top pt-0"
-                />
-=======
             <div className="flex-1 flex items-center gap-3 min-h-[50px]">
               <div className="flex-1 relative text-left">
                 <AnimatePresence mode="wait">
                   {inputValue.length === 0 ? (
                     <motion.span
-                      key={mode + placeholderIndex} // key changes force re-render animation
+                      key={mode + placeholderIndex}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
@@ -201,6 +164,7 @@ export default function Hero({ settings }: HeroProps) {
                     rows={3}
                     value={inputValue}
                     onChange={(event) => setInputValue(event.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none resize-none text-left align-top pt-0"
                   />
                 ) : (
@@ -209,20 +173,16 @@ export default function Hero({ settings }: HeroProps) {
                     type="text"
                     value={inputValue}
                     onChange={(event) => setInputValue(event.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none h-full"
                   />
                 )}
->>>>>>> 100e1db3b81738461e957aa0de35dfc626952a67
               </div>
             </div>
             <motion.button
               layout
               type="button"
-<<<<<<< HEAD
-              onClick={handleChatSubmit}
-              className="absolute right-5 bottom-5 h-11 w-11 rounded-full border border-primary/40 bg-primary text-white hover:bg-secondary hover:border-secondary transition-colors inline-flex items-center justify-center"
-              aria-label="Kirim"
-=======
+              onClick={handleSubmit}
               className={clsx(
                 "h-11 w-11 rounded-full border transition-colors inline-flex items-center justify-center flex-shrink-0",
                 mode === 'chat'
@@ -230,7 +190,6 @@ export default function Hero({ settings }: HeroProps) {
                   : "self-center border-secondary/40 bg-secondary text-white hover:bg-secondary/80 hover:border-secondary"
               )}
               aria-label={mode === 'chat' ? "Kirim" : "Cari"}
->>>>>>> 100e1db3b81738461e957aa0de35dfc626952a67
             >
               {mode === 'chat' ? <Send01 className="h-4 w-4" /> : <SearchMd className="h-4 w-4" />}
             </motion.button>

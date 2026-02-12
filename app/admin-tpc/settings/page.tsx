@@ -180,6 +180,25 @@ export default function AdminSettingsPage() {
               />
             </label>
           </div>
+          <div className="mt-4">
+            <label className="flex flex-col gap-2 text-sm text-text-dark">
+              URL Backend (Auth Server)
+              <input
+                className="rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
+                placeholder="http://localhost:3000"
+                value={settings.redirects?.backendUrl ?? ''}
+                onChange={(event) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    redirects: { ...prev.redirects, backendUrl: event.target.value },
+                  }))
+                }
+              />
+              <span className="text-xs text-text-dark/40">
+                URL server autentikasi. Kosongkan untuk menggunakan default (env variable atau localhost:3000).
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-primary/20 bg-white p-6">

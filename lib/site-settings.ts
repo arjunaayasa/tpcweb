@@ -4,6 +4,7 @@ export const DEFAULT_SETTINGS = {
   redirects: {
     owlieChat: '',
     taxKnowledge: '',
+    backendUrl: '',
   },
   hero: {
     title: 'Intelligent Tax Solutions',
