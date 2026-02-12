@@ -3,12 +3,12 @@ import { fetchAuthState, getPostLoginRedirect, SSO_COOKIE_NAME } from '@/lib/sso
 
 describe('SSO helpers', () => {
   test('redirects admin to admin panel', () => {
-    const redirect = getPostLoginRedirect({ role: 'ADMIN' });
+    const redirect = getPostLoginRedirect({ role: 'ADMIN', id: '1', email: 'admin@t.co' });
     expect(redirect).toBe('/admin-tpc');
   });
 
   test('redirects user to profile', () => {
-    const redirect = getPostLoginRedirect({ role: 'USER' });
+    const redirect = getPostLoginRedirect({ role: 'USER', id: '2', email: 'user@t.co' });
     expect(redirect).toBe('/my-profile');
   });
 

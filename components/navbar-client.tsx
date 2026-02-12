@@ -75,9 +75,8 @@ export default function NavbarClient({ user }: NavbarClientProps) {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-colors duration-300 animate-fade-down ${
-        isScrolled ? 'bg-primary text-white shadow-lg' : 'bg-transparent text-text-dark'
-      }`}
+      className={`fixed top-0 w-full z-50 transition-colors duration-300 animate-fade-down ${isScrolled ? 'bg-primary text-white shadow-lg' : 'bg-transparent text-text-dark'
+        }`}
     >
       <div className="relative container mx-auto px-6 py-4 flex items-center">
         <div className="text-xl font-bold tracking-tight">
@@ -89,6 +88,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
           <a href="/#features" className={`cursor-pointer transition-colors ${linkHover}`}>Fitur</a>
           <a href="/#products" className={`cursor-pointer transition-colors ${linkHover}`}>Produk</a>
           <a href="/#testimonials" className={`cursor-pointer transition-colors ${linkHover}`}>Testimoni</a>
+          <a href="/#pricing" className={`cursor-pointer transition-colors ${linkHover}`}>Harga</a>
           <a href="/#faq" className={`cursor-pointer transition-colors ${linkHover}`}>Tanya Jawab</a>
         </div>
 
@@ -98,9 +98,8 @@ export default function NavbarClient({ user }: NavbarClientProps) {
               <button
                 type="button"
                 onClick={() => setIsOpen((prev) => !prev)}
-                className={`flex items-center gap-3 rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${
-                  isScrolled ? 'border-white/40 hover:bg-white/10' : 'border-text-dark/20 hover:bg-text-dark/5'
-                }`}
+                className={`flex items-center gap-3 rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${isScrolled ? 'border-white/40 hover:bg-white/10' : 'border-text-dark/20 hover:bg-text-dark/5'
+                  }`}
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/20 text-xs font-bold text-secondary">
                   {getInitials(user)}
@@ -114,9 +113,8 @@ export default function NavbarClient({ user }: NavbarClientProps) {
               </button>
               {isOpen ? (
                 <div
-                  className={`absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border shadow-xl ${
-                    isScrolled ? 'border-white/10 bg-primary text-white' : 'border-slate-200 bg-white text-text-dark'
-                  }`}
+                  className={`absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border shadow-xl ${isScrolled ? 'border-white/10 bg-primary text-white' : 'border-slate-200 bg-white text-text-dark'
+                    }`}
                 >
                   <div className="px-4 py-3 text-xs">
                     <p className="font-semibold">{profileLabel}</p>
@@ -125,18 +123,16 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                   <div className="flex flex-col gap-1 px-2 py-2 text-sm">
                     <Link
                       href="/my-profile"
-                      className={`rounded-xl px-3 py-2 transition-colors ${
-                        isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
-                      }`}
+                      className={`rounded-xl px-3 py-2 transition-colors ${isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
+                        }`}
                       onClick={() => setIsOpen(false)}
                     >
                       Portal Pengguna
                     </Link>
                     <Link
                       href="/my-profile/subscriptions"
-                      className={`rounded-xl px-3 py-2 transition-colors ${
-                        isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
-                      }`}
+                      className={`rounded-xl px-3 py-2 transition-colors ${isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
+                        }`}
                       onClick={() => setIsOpen(false)}
                     >
                       Kelola Langganan
@@ -144,9 +140,8 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                     {user.role === 'ADMIN' ? (
                       <Link
                         href="/admin-tpc"
-                        className={`rounded-xl px-3 py-2 transition-colors ${
-                          isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
-                        }`}
+                        className={`rounded-xl px-3 py-2 transition-colors ${isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
+                          }`}
                         onClick={() => setIsOpen(false)}
                       >
                         Panel Admin
@@ -155,9 +150,8 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className={`rounded-xl px-3 py-2 text-left transition-colors ${
-                        isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
-                      }`}
+                      className={`rounded-xl px-3 py-2 text-left transition-colors ${isScrolled ? 'hover:bg-white/10' : 'hover:bg-slate-100'
+                        }`}
                     >
                       Keluar
                     </button>
