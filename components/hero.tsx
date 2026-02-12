@@ -7,9 +7,10 @@ import ParticlesBg from './particles-bg';
 
 type HeroProps = {
   settings?: SiteSettings['hero'];
+  redirects?: SiteSettings['redirects'];
 };
 
-export default function Hero({ settings }: HeroProps) {
+export default function Hero({ settings, redirects }: HeroProps) {
   const placeholders =
     settings?.placeholders?.length ? settings.placeholders : [
       'Tanya tentang batas waktu pelaporan SPT?',
@@ -22,6 +23,9 @@ export default function Hero({ settings }: HeroProps) {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
 
+  const owlieChatUrl = redirects?.owlieChat || '#';
+  const taxKnowledgeUrl = redirects?.taxKnowledge || '#';
+
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
@@ -29,6 +33,23 @@ export default function Hero({ settings }: HeroProps) {
 
     return () => clearInterval(interval);
   }, [placeholders.length]);
+
+  const handleChatSubmit = () => {
+    if (!owlieChatUrl || owlieChatUrl === '#') return;
+    const query = inputValue.trim();
+    // Build URL with optional query param
+    const url = query
+      ? `${owlieChatUrl}${owlieChatUrl.includes('?') ? '&' : '?'}q=${encodeURIComponent(query)}`
+      : owlieChatUrl;
+    window.open(url, '_blank', 'noopener');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleChatSubmit();
+    }
+  };
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-soft-bg to-neutral-light overflow-hidden">
@@ -48,15 +69,25 @@ export default function Hero({ settings }: HeroProps) {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
           style={{ animationDelay: '240ms' }}
         >
-          <button className="flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-xl hover:bg-secondary transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-lg min-w-[200px] justify-center">
+          <a
+            href={owlieChatUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-xl hover:bg-secondary transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-lg min-w-[200px] justify-center"
+          >
             <MessageChatSquare className="w-6 h-6" />
             {settings?.ctaPrimary ?? 'Owlie Chat'}
-          </button>
+          </a>
 
-          <button className="flex items-center gap-3 bg-transparent text-primary border border-primary px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm font-semibold text-lg min-w-[200px] justify-center">
+          <a
+            href={taxKnowledgeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 bg-transparent text-primary border border-primary px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm font-semibold text-lg min-w-[200px] justify-center"
+          >
             <BookOpen01 className="w-6 h-6" />
             {settings?.ctaSecondary ?? 'Tax Knowledge AI'}
-          </button>
+          </a>
         </div>
 
         <div
@@ -83,12 +114,14 @@ export default function Hero({ settings }: HeroProps) {
                   rows={3}
                   value={inputValue}
                   onChange={(event) => setInputValue(event.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none resize-none text-left align-top pt-0"
                 />
               </div>
             </div>
             <button
               type="button"
+              onClick={handleChatSubmit}
               className="absolute right-5 bottom-5 h-11 w-11 rounded-full border border-primary/40 bg-primary text-white hover:bg-secondary hover:border-secondary transition-colors inline-flex items-center justify-center"
               aria-label="Kirim"
             >

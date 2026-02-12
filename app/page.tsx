@@ -13,7 +13,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col">
       <Navbar />
-      <Hero settings={settings.hero} />
+      <Hero settings={settings.hero} redirects={settings.redirects} />
       <FeatureCards settings={settings.features} />
       <FeatureDetails settings={settings.featureDetails} />
       <Testimonials />

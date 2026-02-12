@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/prisma';
 
 export const DEFAULT_SETTINGS = {
+  redirects: {
+    owlieChat: '',
+    taxKnowledge: '',
+  },
   hero: {
     title: 'Intelligent Tax Solutions',
     subtitle: 'Powered by TPC AI. Experience the future of consulting.',

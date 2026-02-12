@@ -17,6 +17,10 @@ const normalizeSettings = (value?: SettingsState) => {
   return {
     ...base,
     ...value,
+    redirects: {
+      ...base.redirects,
+      ...value.redirects,
+    },
     hero: {
       ...base.hero,
       ...value.hero,
@@ -140,6 +144,44 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        {/* Redirect Fitur */}
+        <div className="rounded-2xl border border-primary/20 bg-white p-6">
+          <h3 className="text-lg font-semibold text-text-dark">Redirect Fitur</h3>
+          <p className="text-sm text-text-dark/60 mt-1">
+            URL redirect untuk tombol dan menu Owlie Chat &amp; Tax Knowledge AI.
+          </p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm text-text-dark">
+              URL Owlie Chat
+              <input
+                className="rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
+                placeholder="https://chat.taxindo.ai"
+                value={settings.redirects?.owlieChat ?? ''}
+                onChange={(event) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    redirects: { ...prev.redirects, owlieChat: event.target.value },
+                  }))
+                }
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm text-text-dark">
+              URL Tax Knowledge AI
+              <input
+                className="rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
+                placeholder="https://knowledge.taxindo.ai"
+                value={settings.redirects?.taxKnowledge ?? ''}
+                onChange={(event) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    redirects: { ...prev.redirects, taxKnowledge: event.target.value },
+                  }))
+                }
+              />
+            </label>
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-primary/20 bg-white p-6">
           <h3 className="text-lg font-semibold text-text-dark">Bagian Utama</h3>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -422,8 +464,8 @@ export default function AdminSettingsPage() {
 
         <div className="rounded-2xl border border-primary/20 bg-white p-6">
           <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-text-dark">Tanya Jawab</h3>
-              <p className="text-sm text-text-dark/60">Pertanyaan umum dan panel samping.</p>
+            <h3 className="text-lg font-semibold text-text-dark">Tanya Jawab</h3>
+            <p className="text-sm text-text-dark/60">Pertanyaan umum dan panel samping.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-2 text-sm text-text-dark">
