@@ -54,6 +54,7 @@ export const DEFAULT_SETTINGS = {
         description:
           'Gunakan bahasa sehari-hari untuk konsultasi pajak, cek pasal, hingga minta ringkasan. Owlie menjawab cepat dengan konteks yang jelas dan mudah dipahami.',
         imageLabel: 'Owlie Chat Preview',
+        imageUrl: '',
       },
       {
         name: 'Tax Knowledge AI',
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS = {
         description:
           'Temukan rujukan pajak dengan pencarian cerdas, struktur rapi, dan jawaban yang konsisten. Cocok untuk tim pajak yang butuh data cepat dan akurat.',
         imageLabel: 'Tax Knowledge AI Preview',
+        imageUrl: '',
       },
       {
         name: 'Studio AI',
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS = {
         description:
           'Buat draft surat, ringkasan laporan, hingga memo internal dengan format yang profesional. Studio AI membantu merapikan tulisan sehingga siap dikirim.',
         imageLabel: 'Studio AI Preview',
+        imageUrl: '',
       },
     ],
   },

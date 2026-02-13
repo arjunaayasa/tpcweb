@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DEFAULT_SETTINGS } from '@/lib/site-settings';
+import ImageUpload from '@/components/admin/image-upload';
 
 type SettingsState = typeof DEFAULT_SETTINGS;
 type SettingsResponse = { settings: SettingsState };
@@ -54,7 +55,7 @@ const normalizeSettings = (value?: SettingsState) => {
   };
 };
 
-const emptyFeatureDetail = { name: '', headline: '', description: '', imageLabel: '' };
+const emptyFeatureDetail = { name: '', headline: '', description: '', imageLabel: '', imageUrl: '' };
 const emptyFaqItem = { question: '', answer: '' };
 const emptyFooterSection = { title: '', links: [''] };
 
@@ -436,7 +437,7 @@ export default function AdminSettingsPage() {
                   />
                   <input
                     className="rounded-xl border border-primary/20 bg-white px-4 py-2 text-sm text-text-dark"
-                    placeholder="Label gambar"
+                    placeholder="Text Placeholder (jika gambar kosong)"
                     value={item.imageLabel}
                     onChange={(event) => {
                       const next = [...settings.featureDetails.items];
@@ -447,6 +448,20 @@ export default function AdminSettingsPage() {
                       }));
                     }}
                   />
+                  <div className="col-span-1 md:col-span-2 space-y-2">
+                    <p className="text-sm font-medium text-text-dark">Gambar Detail</p>
+                    <ImageUpload
+                      value={item.imageUrl}
+                      onChange={(url) => {
+                        const next = [...settings.featureDetails.items];
+                        next[index] = { ...next[index], imageUrl: url };
+                        setSettings((prev) => ({
+                          ...prev,
+                          featureDetails: { ...prev.featureDetails, items: next },
+                        }));
+                      }}
+                    />
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-3">
                   <input

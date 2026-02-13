@@ -7,6 +7,7 @@ const defaultDetailSections = [
     description:
       'Gunakan bahasa sehari-hari untuk konsultasi pajak, cek pasal, hingga minta ringkasan. Owlie menjawab cepat dengan konteks yang jelas dan mudah dipahami.',
     imageLabel: 'Owlie Chat Preview',
+    imageUrl: '',
   },
   {
     name: 'Tax Knowledge AI',
@@ -14,6 +15,7 @@ const defaultDetailSections = [
     description:
       'Temukan rujukan pajak dengan pencarian cerdas, struktur rapi, dan jawaban yang konsisten. Cocok untuk tim pajak yang butuh data cepat dan akurat.',
     imageLabel: 'Tax Knowledge AI Preview',
+    imageUrl: '',
   },
   {
     name: 'Studio AI',
@@ -21,6 +23,7 @@ const defaultDetailSections = [
     description:
       'Buat draft surat, ringkasan laporan, hingga memo internal dengan format yang profesional. Studio AI membantu merapikan tulisan sehingga siap dikirim.',
     imageLabel: 'Studio AI Preview',
+    imageUrl: '',
   },
 ];
 
@@ -59,8 +62,16 @@ export default function FeatureDetails({ settings }: FeatureDetailsProps) {
                 className="animate-slide-in-right"
                 style={{ animationDelay: `${index * 140 + 120}ms` }}
               >
-                <div className="w-full aspect-[16/9] rounded-3xl border border-dashed border-primary/40 bg-white shadow-sm flex items-center justify-center text-sm text-text-dark/50">
-                  {section.imageLabel}
+                <div className="w-full aspect-[16/9] rounded-3xl border border-dashed border-primary/40 bg-white shadow-sm flex items-center justify-center text-sm text-text-dark/50 overflow-hidden relative">
+                  {section.imageUrl ? (
+                    <img
+                      src={section.imageUrl}
+                      alt={section.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    section.imageLabel
+                  )}
                 </div>
               </div>
             </div>
