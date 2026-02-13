@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAuthMe, SSO_COOKIE_NAME } from '@/lib/sso';
+import { fetchAuthMe, AUTH_BASE_URL, SSO_COOKIE_NAME } from '@/lib/sso';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    const user = await fetchAuthMe(request.headers.get('cookie'));
+    const user = await fetchAuthMe(request.headers.get('cookie'), AUTH_BASE_URL);
     if (!user) {
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);

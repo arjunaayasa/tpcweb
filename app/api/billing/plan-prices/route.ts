@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
-        const upstreamUrl = new URL('/api/billing/plan-prices', AUTH_BASE_URL);
+        const base = await getBackendUrl();
+        const upstreamUrl = new URL('/api/billing/plan-prices', base);
         const plan = url.searchParams.get('plan');
         const interval = url.searchParams.get('interval');
         const currency = url.searchParams.get('currency');
@@ -49,7 +50,8 @@ export async function POST(request: Request) {
         const apiKey = process.env.BILLING_API_KEY;
         if (apiKey) headers['x-api-key'] = apiKey;
 
-        const upstream = await fetch(`${AUTH_BASE_URL}/api/billing/plan-prices`, {
+        const base2 = await getBackendUrl();
+        const upstream = await fetch(`${base2}/api/billing/plan-prices`, {
             method: 'POST',
             headers,
             body,
@@ -68,7 +70,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
     try {
         const url = new URL(request.url);
-        const upstreamUrl = new URL('/api/billing/plan-prices', AUTH_BASE_URL);
+        const base3 = await getBackendUrl();
+        const upstreamUrl = new URL('/api/billing/plan-prices', base3);
         const plan = url.searchParams.get('plan');
         const interval = url.searchParams.get('interval');
         const currency = url.searchParams.get('currency');

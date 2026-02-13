@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const upstreamUrl = new URL('/api/billing/users', AUTH_BASE_URL);
+    const base = await getBackendUrl();
+    const upstreamUrl = new URL('/api/billing/users', base);
     const params = upstreamUrl.searchParams;
     const q = url.searchParams.get('q');
     const plan = url.searchParams.get('plan');

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL, SSO_COOKIE_NAME } from '@/lib/sso';
+import { getBackendUrl, SSO_COOKIE_NAME } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
-    await fetch(`${AUTH_BASE_URL}/api/auth/logout`, {
+    const base = await getBackendUrl();
+    await fetch(`${base}/api/auth/logout`, {
       method: 'POST',
       headers: {
         cookie: request.headers.get('cookie') ?? '',

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
     const body = await request.text();
-    const upstream = await fetch(`${AUTH_BASE_URL}/api/billing/change-plan`, {
+    const base = await getBackendUrl();
+    const upstream = await fetch(`${base}/api/billing/change-plan`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

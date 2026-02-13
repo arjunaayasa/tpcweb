@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
-    const upstream = await fetch(`${AUTH_BASE_URL}/api/plans`, {
+    const base = await getBackendUrl();
+    const upstream = await fetch(`${base}/api/plans`, {
       headers: {
         cookie: request.headers.get('cookie') ?? '',
       },

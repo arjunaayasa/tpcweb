@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 import { createInvoiceFromPayment } from '@/lib/invoice';
 import crypto from 'crypto';
 
@@ -81,7 +81,8 @@ export async function POST(request: Request) {
         };
         if (BILLING_API_KEY) headers['x-api-key'] = BILLING_API_KEY;
 
-        const changeRes = await fetch(`${AUTH_BASE_URL}/api/billing/change-plan`, {
+        const base = await getBackendUrl();
+        const changeRes = await fetch(`${base}/api/billing/change-plan`, {
             method: 'POST',
             headers,
             body: JSON.stringify(changePlanPayload),

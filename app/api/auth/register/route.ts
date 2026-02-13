@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 const forwardAuthRequest = async (request: Request, path: string) => {
   const body = await request.text();
-  const upstream = await fetch(`${AUTH_BASE_URL}${path}`, {
+  const base = await getBackendUrl();
+  const upstream = await fetch(`${base}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

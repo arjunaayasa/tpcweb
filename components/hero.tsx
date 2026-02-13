@@ -65,8 +65,9 @@ export default function Hero({ settings, redirects }: HeroProps) {
       window.open(url, '_blank', 'noopener');
     } else {
       if (!taxKnowledgeUrl || taxKnowledgeUrl === '#') return;
+      const base = taxKnowledgeUrl.replace(/\/+$/, '');
       const url = query
-        ? `${taxKnowledgeUrl}${taxKnowledgeUrl.includes('?') ? '&' : '?'}q=${encodeURIComponent(query)}`
+        ? `${base}/search?q=${encodeURIComponent(query)}`
         : taxKnowledgeUrl;
       window.open(url, '_blank', 'noopener');
     }

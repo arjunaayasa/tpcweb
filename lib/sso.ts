@@ -122,18 +122,18 @@ export const getSSOLogoutUrl = async () => {
   return new URL('/api/auth/logout', base).toString();
 };
 
-export const fetchAuthMe = async (cookieHeader: string | null) => {
-  const state = await fetchAuthState(cookieHeader);
+export const fetchAuthMe = async (cookieHeader: string | null, baseUrl?: string) => {
+  const state = await fetchAuthState(cookieHeader, baseUrl);
   return state?.user ?? null;
 };
 
-export const fetchAuthState = async (cookieHeader: string | null) => {
+export const fetchAuthState = async (cookieHeader: string | null, baseUrl?: string) => {
   const session = getCookieValue(cookieHeader, SSO_COOKIE_NAME);
   if (!session) {
     return null;
   }
 
-  const base = await getBackendUrl();
+  const base = baseUrl ?? await getBackendUrl();
   const res = await fetch(`${base}/api/auth/me`, {
     headers: {
       cookie: `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`,

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
-        const upstreamUrl = new URL('/api/public/plan-prices', AUTH_BASE_URL);
+        const base = await getBackendUrl();
+        const upstreamUrl = new URL('/api/public/plan-prices', base);
         const plan = url.searchParams.get('plan');
         const interval = url.searchParams.get('interval');
         const currency = url.searchParams.get('currency');

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 import { getSiteSettings } from '@/lib/site-settings';
 
 const formatNumber = (value: number) =>
@@ -32,7 +32,8 @@ export default async function AdminDashboardPage() {
   });
   let planCount = 0;
   try {
-    const res = await fetch(`${AUTH_BASE_URL}/api/plans`, { cache: 'no-store' });
+    const base = await getBackendUrl();
+    const res = await fetch(`${base}/api/plans`, { cache: 'no-store' });
     if (res.ok) {
       const data = (await res.json()) as { plans?: Record<string, unknown> };
       planCount = data.plans ? Object.keys(data.plans).length : 0;

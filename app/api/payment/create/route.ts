@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AUTH_BASE_URL } from '@/lib/sso';
+import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
@@ -18,7 +18,8 @@ export async function POST(request: Request) {
         const cookie = request.headers.get('cookie') ?? '';
 
         // 1. Get user profile from auth service
-        const profileRes = await fetch(`${AUTH_BASE_URL}/api/profile`, {
+        const base = await getBackendUrl();
+        const profileRes = await fetch(`${base}/api/profile`, {
             headers: { cookie },
             cache: 'no-store',
         });
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
 
         // 3. Get price from plan-prices API
         const priceRes = await fetch(
-            `${AUTH_BASE_URL}/api/public/plan-prices?plan=${plan}&interval=${interval}`,
+            `${base}/api/public/plan-prices?plan=${plan}&interval=${interval}`,
             { cache: 'no-store' },
         );
 
