@@ -122,22 +122,32 @@ export const getSSOLogoutUrl = async () => {
   return new URL('/api/auth/logout', base).toString();
 };
 
-export const fetchAuthMe = async (cookieHeader: string | null, baseUrl?: string) => {
-  const state = await fetchAuthState(cookieHeader, baseUrl);
+export const fetchAuthMe = async (cookieHeader: string | null, baseUrl?: string, token?: string) => {
+  const state = await fetchAuthState(cookieHeader, baseUrl, token);
   return state?.user ?? null;
 };
 
-export const fetchAuthState = async (cookieHeader: string | null, baseUrl?: string) => {
-  const session = getCookieValue(cookieHeader, SSO_COOKIE_NAME);
+export const fetchAuthState = async (cookieHeader: string | null, baseUrl?: string, token?: string) => {
+  let session = token;
+  if (!session) {
+    session = getCookieValue(cookieHeader, SSO_COOKIE_NAME);
+  }
+
   if (!session) {
     return null;
   }
 
   const base = baseUrl ?? await getBackendUrl();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    headers['cookie'] = `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`;
+  }
+
   const res = await fetch(`${base}/api/auth/me`, {
-    headers: {
-      cookie: `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`,
-    },
+    headers,
     cache: 'no-store',
   });
 
@@ -153,17 +163,26 @@ export const fetchAuthState = async (cookieHeader: string | null, baseUrl?: stri
   };
 };
 
-export const fetchAuthProfile = async (cookieHeader: string | null) => {
-  const session = getCookieValue(cookieHeader, SSO_COOKIE_NAME);
+export const fetchAuthProfile = async (cookieHeader: string | null, token?: string) => {
+  let session = token;
+  if (!session) {
+    session = getCookieValue(cookieHeader, SSO_COOKIE_NAME);
+  }
+
   if (!session) {
     return null;
   }
 
   const base = await getBackendUrl();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    headers['cookie'] = `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`;
+  }
+
   const res = await fetch(`${base}/api/profile`, {
-    headers: {
-      cookie: `${SSO_COOKIE_NAME}=${encodeURIComponent(session)}`,
-    },
+    headers,
     cache: 'no-store',
   });
 
@@ -187,7 +206,15 @@ export const getPostLoginRedirect = (user: AuthUser | null) => {
 };
 
 export const requireAdminFromRequest = async (request: Request) => {
-  const state = await fetchAuthState(request.headers.get('cookie'));
+  const cookie = request.headers.get('cookie');
+  const authHeader = request.headers.get('authorization');
+  let token: string | undefined;
+
+  if (authHeader?.toLowerCase().startsWith('bearer ')) {
+    token = authHeader.substring(7);
+  }
+
+  const state = await fetchAuthState(cookie, undefined, token);
   if (!state?.user || state.user.role !== 'ADMIN') {
     return null;
   }

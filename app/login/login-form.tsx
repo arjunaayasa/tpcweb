@@ -9,6 +9,7 @@ type LoginResponse = {
     role?: 'ADMIN' | 'USER';
   };
   redirectTo?: string | null;
+  sessionToken?: string;
 };
 
 const getRoleRedirect = (role?: 'ADMIN' | 'USER') =>
@@ -54,6 +55,12 @@ export default function LoginForm() {
 
       if (res.ok) {
         const data = (await res.json()) as LoginResponse;
+
+        // Store sessionToken for SSO with TPC-AI
+        if (data.sessionToken) {
+          localStorage.setItem('tpc_token', data.sessionToken);
+        }
+
         const redirectTarget = data.redirectTo ?? getRoleRedirect(data.user?.role);
         router.replace(redirectTarget);
         return;

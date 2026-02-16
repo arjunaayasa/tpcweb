@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSsoToken, appendSsoToken } from '@/lib/use-sso-token';
 
 type NavbarUser = {
   name?: string | null;
@@ -36,6 +37,7 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const fiturRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const ssoToken = useSsoToken();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -117,13 +119,13 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
             {isFiturOpen ? (
               <div
                 className={`absolute left-1/2 -translate-x-1/2 mt-3 w-56 rounded-2xl border shadow-xl overflow-hidden ${isScrolled
-                    ? 'border-white/10 bg-primary text-white'
-                    : 'border-slate-200 bg-white text-text-dark'
+                  ? 'border-white/10 bg-primary text-white'
+                  : 'border-slate-200 bg-white text-text-dark'
                   }`}
               >
                 <div className="flex flex-col py-2">
                   <a
-                    href={redirects?.owlieChat || '#'}
+                    href={appendSsoToken(redirects?.owlieChat || '#', ssoToken)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsFiturOpen(false)}
@@ -143,7 +145,7 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
                     </div>
                   </a>
                   <a
-                    href={redirects?.taxKnowledge || '#'}
+                    href={appendSsoToken(redirects?.taxKnowledge || '#', ssoToken)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsFiturOpen(false)}

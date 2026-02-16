@@ -6,6 +6,7 @@ import type { SiteSettings } from '@/lib/site-settings';
 import ParticlesBg from './particles-bg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
+import { useSsoToken, appendSsoToken } from '@/lib/use-sso-token';
 
 type HeroProps = {
   settings?: SiteSettings['hero'];
@@ -35,9 +36,10 @@ export default function Hero({ settings, redirects }: HeroProps) {
   const [mode, setMode] = useState<HeroMode>('chat');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
+  const ssoToken = useSsoToken();
 
-  const owlieChatUrl = redirects?.owlieChat || '#';
-  const taxKnowledgeUrl = redirects?.taxKnowledge || '#';
+  const owlieChatUrl = appendSsoToken(redirects?.owlieChat || '#', ssoToken);
+  const taxKnowledgeUrl = appendSsoToken(redirects?.taxKnowledge || '#', ssoToken);
 
   const currentPlaceholders = mode === 'chat' ? chatPlaceholders : searchPlaceholders;
 

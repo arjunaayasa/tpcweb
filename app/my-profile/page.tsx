@@ -23,6 +23,7 @@ export default async function MyProfilePage() {
 
   const settings = await getSiteSettings(['footer']);
   const { user, plan, usage } = profile;
+  console.log('DEBUG_PLAN_LIMITS:', JSON.stringify(plan, null, 2));
 
   // Plan Label Logic
   const planLabelMap: Record<string, string> = {
@@ -93,7 +94,11 @@ export default async function MyProfilePage() {
 
           {/* Right Column (Main Content) */}
           <div className="lg:col-span-8 flex flex-col gap-6">
-            <UsageStats usage={usageCounts} limits={limits} />
+            <UsageStats
+              usage={usageCounts}
+              limits={limits}
+              allowedModels={plan?.allowedModels ?? []}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <SubscriptionStatus
                 planLabel={planLabel}

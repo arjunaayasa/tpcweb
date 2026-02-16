@@ -9,6 +9,8 @@ Dokumentasi ini khusus untuk Auth Center (login/register/profile/plan). Cocok di
 ## Session & Cookie
 - Cookie: `tpc_session` (HttpOnly, SameSite=Lax, domain = AUTH_COOKIE_DOMAIN)
 - User login sekali, cookie bisa dipakai lintas subdomain (SSO).
+- Selain cookie, API juga menerima `Authorization: Bearer <sessionToken>` sebagai alternatif autentikasi.
+- `sessionToken` dikembalikan di response login/register, bisa disimpan oleh external app.
 
 ## API Key (Third-Party Apps)
 - Jika request berasal dari origin yang berbeda dengan Auth Center, wajib sertakan `x-api-key`.
@@ -38,9 +40,10 @@ Body:
 
 Response 200:
 - user: { id, email, name, role, plan, avatarUrl }
+- sessionToken: string — token sesi, bisa dipakai untuk Bearer auth atau SSO redirect
 - redirectTo: string | null
 
-Jika `appId + redirectUri` dikirim dan valid, `redirectTo` berisi URL redirect.
+Jika `appId + redirectUri` dikirim dan valid, `redirectTo` berisi URL redirect (sudah termasuk `sso_token` di query param).
 
 ### POST /api/auth/register
 Register user baru.
@@ -129,8 +132,27 @@ Query:
 - state (string, optional)
 
 Response 200:
-- redirectTo: string
+- redirectTo: string (termasuk `sso_token` di query param)
 - app: { appId, name }
+
+### GET /api/auth/sso/redirect
+**SSO Cookie Bridge** — endpoint untuk meng-set cookie sesi di TPC-AI dari token yang diberikan external app.
+
+Alur: External app redirect user ke endpoint ini → TPC-AI set cookie → redirect ke halaman tujuan.
+
+Query:
+- token (string, required) — sessionToken dari response login
+- next (string, optional, default: /chat) — path tujuan setelah cookie diset
+
+Response:
+- 302 redirect ke `next` jika token valid
+- 302 redirect ke `/login` jika token tidak valid
+
+Contoh:
+```
+GET /api/auth/sso/redirect?token=abc123&next=/chat
+→ Set cookie tpc_session=abc123 → 302 → /chat
+```
 
 ### POST /api/billing/change-plan
 Ubah plan user (dipakai oleh billing/purchasing platform).
@@ -214,7 +236,25 @@ Response 200:
 ---
 
 ## Catatan Integrasi Aplikasi Lain
-1) Redirect user ke `/login` atau `/register` dengan `app_id` + `redirect_uri`.
-2) Setelah login, redirect balik dengan cookie `tpc_session` sudah aktif.
-3) Aplikasi panggil `GET /api/auth/me` atau `GET /api/profile` untuk info plan.
-4) Jika origin berbeda, wajib sertakan `x-api-key`.
+
+### Cara 1: Redirect-Based SSO (Recommended)
+1) Redirect user ke `/login?app_id=xxx&redirect_uri=http://your-app/callback&state=random`.
+2) User login di TPC-AI → cookie `tpc_session` diset.
+3) TPC-AI redirect balik ke `redirect_uri` dengan `sso_token` dan `state` di query param.
+4) External app terima `sso_token` dari URL, simpan untuk API calls.
+5) Panggil `GET /api/auth/me` dengan header `Authorization: Bearer <sso_token>`.
+
+### Cara 2: API Login + SSO Redirect Bridge
+1) External app panggil `POST /api/auth/login` dengan `x-api-key` → dapat `sessionToken`.
+2) Simpan `sessionToken` di client (localStorage, sessionStorage, dll).
+3) Untuk navigasi ke TPC-AI, redirect user ke:
+   `{TPC_AI_URL}/api/auth/sso/redirect?token={sessionToken}&next=/chat`
+4) TPC-AI set cookie dan redirect otomatis ke halaman tujuan.
+
+### Cara 3: Bearer Token untuk API Calls
+1) Semua endpoint yang pakai session cookie juga menerima `Authorization: Bearer <sessionToken>`.
+2) Cocok untuk API calls cross-origin tanpa perlu cookie.
+
+### Notes
+- Jika origin berbeda, wajib sertakan `x-api-key` di header.
+- `sessionToken` dirahasiakan — jangan expose di client-side log.
