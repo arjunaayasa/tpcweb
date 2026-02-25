@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getBackendUrl } from '@/lib/sso';
 import { getSiteSettings } from '@/lib/site-settings';
 
+export const dynamic = 'force-dynamic';
+
 const formatNumber = (value: number) =>
   new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(value);
 

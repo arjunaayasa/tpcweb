@@ -9,6 +9,8 @@ export const metadata = {
     description: 'Selesaikan pembayaran untuk mengaktifkan paket langganan TPC AI Anda.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function PaymentPage() {
     const settings = await getSiteSettings(['footer']);
 

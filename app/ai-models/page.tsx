@@ -8,6 +8,8 @@ export const metadata = {
     description: 'Kenali setiap model AI Owlie yang tersedia. Dari Owlie Lite hingga Owlie Max, temukan model yang sesuai kebutuhan perpajakan Anda.',
 };
 
+export const dynamic = 'force-dynamic';
+
 /* ── Icons ── */
 const CheckIcon = () => (
     <svg className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

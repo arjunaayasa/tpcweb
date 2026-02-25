@@ -9,6 +9,8 @@ export const metadata = {
     description: 'Pilih paket terbaik untuk kebutuhan konsultasi pajak AI Anda. Mulai gratis atau upgrade ke paket premium.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function PricingPage() {
     const settings = await getSiteSettings(['footer']);
 
