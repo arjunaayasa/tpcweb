@@ -1,17 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useSsoToken, appendSsoToken } from '@/lib/use-sso-token';
 
-const TPCAI_URL = process.env.NEXT_PUBLIC_TPCAI_URL || 'http://192.168.0.46:3000';
+const TPCAI_URL = process.env.NEXT_PUBLIC_TPCAI_URL || 'http://localhost:3000';
 
 export default function QuickAccess() {
-    const ssoToken = useSsoToken();
 
     const links = [
         {
             label: 'Tax Knowledge',
-            path: '/search',
+            path: '/knowledge',
             icon: 'library_books',
             external: true,
         },
@@ -40,7 +38,7 @@ export default function QuickAccess() {
                     link.external ? (
                         <a
                             key={link.path}
-                            href={appendSsoToken(`${TPCAI_URL}${link.path}`, ssoToken)}
+                            href={`${TPCAI_URL}${link.path}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors"

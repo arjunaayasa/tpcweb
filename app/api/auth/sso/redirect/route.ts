@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { SSO_COOKIE_NAME } from '@/lib/sso';
+import { SSO_COOKIE_NAME, getFrontendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
@@ -8,12 +8,15 @@ export async function GET(request: Request) {
     const token = searchParams.get('token');
     const next = searchParams.get('next') || '/chat';
 
+    // Resolve frontend base URL once (tunnel / custom domain aware)
+    const frontendBase = await getFrontendUrl();
+
     if (!token) {
-        return NextResponse.redirect(new URL('/login?error=missing_token', request.url));
+        return NextResponse.redirect(new URL('/login?error=missing_token', frontendBase));
     }
 
     // Use absolute URL for redirect to be safe, though relative works in NextResponse
-    const redirectUrl = new URL(next, request.url);
+    const redirectUrl = new URL(next, frontendBase);
     const response = NextResponse.redirect(redirectUrl);
 
     // Set the cookie

@@ -11,6 +11,7 @@ import UsageStats from './components/usage-stats';
 import UpgradeBanner from './components/upgrade-banner';
 import InvoiceHistory from './components/invoice-history';
 import SubscriptionStatus from './components/subscription-status';
+import AiAddonStatus from './components/ai-addon-status';
 import HelpSupport from './components/help-support';
 
 export default async function MyProfilePage() {
@@ -28,13 +29,22 @@ export default async function MyProfilePage() {
   // Plan Label Logic
   const planLabelMap: Record<string, string> = {
     FREE: 'Free',
+    FREE_LOGIN: 'Free',
+    UMKM: 'UMKM',
+    ENTERPRISE: 'Enterprise',
+    MNC: 'MNC',
     BASIC: 'Basic',
     PLUS: 'Plus',
     MAX: 'Max',
   };
   const userPlan = user.plan ?? 'FREE';
   const planLabel = planLabelMap[userPlan] ?? (userPlan);
-  const isFree = userPlan === 'FREE';
+  const isFree = userPlan === 'FREE' || userPlan === 'FREE_LOGIN';
+
+  // Addon data
+  const effectiveAddon = (user as Record<string, unknown>).effectiveAddon as string ?? 'NONE';
+  const aiAddon = (user as Record<string, unknown>).aiAddon as string ?? 'NONE';
+  const aiAddonExpiry = (user as Record<string, unknown>).aiAddonExpiry as string | null ?? null;
 
   // Billing Logic
   const cycle = getPlanCycle(plan ?? null);
@@ -87,7 +97,7 @@ export default async function MyProfilePage() {
 
           {/* Left Column (Sidebar) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <ProfileCard user={user} planLabel={planLabel} />
+            <ProfileCard user={user} planLabel={planLabel} effectiveAddon={effectiveAddon} />
             <QuickAccess />
             <HelpSupport />
           </div>
@@ -106,8 +116,13 @@ export default async function MyProfilePage() {
                 nextBillingDate={isFree ? '-' : formatDate(next)}
                 isFree={isFree}
               />
-              <UpgradeBanner />
+              <AiAddonStatus
+                effectiveAddon={effectiveAddon}
+                aiAddon={aiAddon}
+                aiAddonExpiry={aiAddonExpiry}
+              />
             </div>
+            {effectiveAddon === 'NONE' && <UpgradeBanner />}
             <InvoiceHistory invoices={invoices} />
           </div>
 

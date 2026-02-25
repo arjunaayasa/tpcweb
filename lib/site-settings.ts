@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS = {
     owlieChat: '',
     taxKnowledge: '',
     backendUrl: '',
+    frontendUrl: '',
   },
   hero: {
     title: 'Intelligent Tax Solutions',

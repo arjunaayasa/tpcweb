@@ -37,6 +37,33 @@ const navItems = [
     ),
   },
   {
+    label: 'Koleksi Dokumen',
+    href: '/admin-tpc/collections',
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'AI Add-on',
+    href: '/admin-tpc/ai-addon-models',
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Harga AI Add-on',
+    href: '/admin-tpc/ai-addon-prices',
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+      </svg>
+    ),
+  },
+  {
     label: 'Testimonial',
     href: '/admin-tpc/testimonials',
     icon: (
@@ -63,6 +90,17 @@ const navItems = [
         <path d="M6 2h9l5 5v15H6z" />
         <path d="M15 2v5h5" />
         <path d="M10 12h4M10 16h4" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Midtrans',
+    href: '/admin-tpc/settings/midtrans',
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <path d="M2 10h20" />
+        <path d="M6 15h4" />
       </svg>
     ),
   },

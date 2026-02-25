@@ -65,15 +65,35 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'ok', message: `Status: ${transaction_status}` });
         }
 
-        // 3. Upgrade user plan
-        if (!plan || (!userId && !email)) {
-            console.error('[Midtrans] Missing plan or user info in notification:', body);
-            return NextResponse.json({ error: 'Missing plan or user info.' }, { status: 400 });
+        // 3. Upgrade user plan and/or activate addon
+        // custom_field2 format:
+        //   "UMKM"            → plan-only purchase
+        //   "addon:PRO"       → addon-only purchase
+        //   "UMKM+addon:PRO"  → combined plan + addon purchase
+        const isCombined = plan?.includes('+addon:');
+        const isAddonOnly = !isCombined && plan?.startsWith('addon:');
+
+        let planName: string | null = null;
+        let addonName: string | null = null;
+
+        if (isCombined) {
+            const parts = plan!.split('+addon:');
+            planName = parts[0];
+            addonName = parts[1];
+        } else if (isAddonOnly) {
+            addonName = plan!.replace('addon:', '');
+        } else {
+            planName = plan ?? null;
         }
 
-        const changePlanPayload: Record<string, string> = { plan };
-        if (email) changePlanPayload.email = email;
-        if (userId) changePlanPayload.userId = userId;
+        if (!planName && !addonName) {
+            console.error('[Midtrans] Missing plan/addon info in notification:', body);
+            return NextResponse.json({ error: 'Missing plan or addon info.' }, { status: 400 });
+        }
+        if (!userId && !email) {
+            console.error('[Midtrans] Missing user info in notification:', body);
+            return NextResponse.json({ error: 'Missing user info.' }, { status: 400 });
+        }
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
@@ -82,22 +102,60 @@ export async function POST(request: Request) {
         if (BILLING_API_KEY) headers['x-api-key'] = BILLING_API_KEY;
 
         const base = await getBackendUrl();
-        const changeRes = await fetch(`${base}/api/billing/change-plan`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(changePlanPayload),
-        });
 
-        if (!changeRes.ok) {
-            const errText = await changeRes.text();
-            console.error('[Midtrans] Failed to change plan:', errText);
-            return NextResponse.json(
-                { error: 'Failed to upgrade plan.', details: errText },
-                { status: 502 },
-            );
+        // Activate plan if applicable
+        if (planName) {
+            const changePlanPayload: Record<string, string> = { plan: planName };
+            if (email) changePlanPayload.email = email;
+            if (userId) changePlanPayload.userId = userId;
+
+            const changeRes = await fetch(`${base}/api/billing/change-plan`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(changePlanPayload),
+            });
+
+            if (!changeRes.ok) {
+                const errText = await changeRes.text();
+                console.error('[Midtrans] Failed to change plan:', errText);
+                return NextResponse.json(
+                    { error: 'Failed to upgrade plan.', details: errText },
+                    { status: 502 },
+                );
+            }
+
+            console.log(`[Midtrans] Plan upgraded: user=${email ?? userId} → ${planName} (order=${order_id})`);
         }
 
-        console.log(`[Midtrans] ✅ Plan upgraded: user=${email ?? userId} → ${plan} (order=${order_id})`);
+        // Activate addon if applicable
+        if (addonName) {
+            const intervalMatch = order_id?.match(/-(MONTHLY|YEARLY|ANNUAL)/i);
+            const parsedInterval = intervalMatch ? intervalMatch[1].toUpperCase() : 'MONTHLY';
+
+            const changeAddonPayload: Record<string, string> = {
+                addon: addonName,
+                interval: parsedInterval === 'ANNUAL' ? 'YEARLY' : parsedInterval,
+            };
+            if (email) changeAddonPayload.email = email;
+            if (userId) changeAddonPayload.userId = userId;
+
+            const changeRes = await fetch(`${base}/api/billing/change-ai-addon`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(changeAddonPayload),
+            });
+
+            if (!changeRes.ok) {
+                const errText = await changeRes.text();
+                console.error('[Midtrans] Failed to activate addon:', errText);
+                return NextResponse.json(
+                    { error: 'Failed to activate addon.', details: errText },
+                    { status: 502 },
+                );
+            }
+
+            console.log(`[Midtrans] Addon activated: user=${email ?? userId} → ${addonName} (order=${order_id})`);
+        }
 
         // 4. Create invoice record
         try {
@@ -110,7 +168,7 @@ export async function POST(request: Request) {
                 orderId: order_id ?? '',
                 userId: userId ?? '',
                 userEmail: email ?? '',
-                plan: plan ?? '',
+                plan: isCombined ? `${planName}+AI-${addonName}` : addonName ? `AI-${addonName}` : (planName ?? ''),
                 amount,
                 interval,
                 paymentMethod: 'Midtrans',
@@ -120,7 +178,10 @@ export async function POST(request: Request) {
             console.error('[Midtrans] Invoice creation failed:', invoiceErr);
         }
 
-        return NextResponse.json({ status: 'ok', message: `Plan upgraded to ${plan}` });
+        const parts: string[] = [];
+        if (planName) parts.push(`Plan: ${planName}`);
+        if (addonName) parts.push(`Addon: ${addonName}`);
+        return NextResponse.json({ status: 'ok', message: parts.join(', ') });
     } catch (err) {
         console.error('[Midtrans] Notification error:', err);
         return NextResponse.json({ error: 'Server error.' }, { status: 500 });

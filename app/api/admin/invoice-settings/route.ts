@@ -12,8 +12,20 @@ export type InvoiceSettingsData = {
     companyAddress: string;
     companyPhone: string;
     companyEmail: string;
-    taxId: string;
+    taxId: string; // NPWP Perusahaan
     footerNote: string;
+    // Pengaturan Pajak Invoice
+    taxEnabled: boolean;          // aktifkan pajak di invoice
+    taxType: string;              // jenis pajak: PPN, PPh, Bebas
+    taxRate: number;              // tarif pajak dalam persen, misal 11 untuk 11%
+    taxLabel: string;             // label pajak di invoice, misal "PPN 11%"
+    taxIncluded: boolean;         // harga sudah termasuk pajak (inclusive) atau ditambahkan (exclusive)
+    stampDutyEnabled: boolean;    // aktifkan bea meterai
+    stampDutyThreshold: number;   // batas nilai invoice (IDR) untuk dikenakan bea meterai
+    stampDutyAmount: number;      // nominal bea meterai (IDR)
+    additionalTaxId: string;      // PKP / nomor pengukuhan PKP (opsional)
+    taxOffice: string;            // KPP / kantor pajak terdaftar
+    taxOfficerName: string;       // nama penanggung jawab pajak
 };
 
 const defaultSettings: InvoiceSettingsData = {
@@ -24,6 +36,18 @@ const defaultSettings: InvoiceSettingsData = {
     companyEmail: 'support@taxindo.ai',
     taxId: '',
     footerNote: 'Terima kasih telah menggunakan layanan kami.',
+    // Pajak
+    taxEnabled: false,
+    taxType: 'PPN',
+    taxRate: 11,
+    taxLabel: 'PPN 11%',
+    taxIncluded: false,
+    stampDutyEnabled: false,
+    stampDutyThreshold: 5000000,
+    stampDutyAmount: 10000,
+    additionalTaxId: '',
+    taxOffice: '',
+    taxOfficerName: '',
 };
 
 /**

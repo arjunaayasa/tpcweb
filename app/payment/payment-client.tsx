@@ -20,11 +20,6 @@ declare global {
     }
 }
 
-const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? '';
-const IS_PRODUCTION = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
-const SNAP_JS_URL = IS_PRODUCTION
-    ? 'https://app.midtrans.com/snap/snap.js'
-    : 'https://app.sandbox.midtrans.com/snap/snap.js';
 
 const planLabels: Record<string, string> = {
     FREE: 'Free',
@@ -33,21 +28,68 @@ const planLabels: Record<string, string> = {
     MAX: 'Max',
 };
 
+const addonLabels: Record<string, string> = {
+    STARTER: 'AI Starter',
+    PRO: 'AI Pro',
+    UNLIMITED: 'AI Unlimited',
+};
+
 const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 type Status = 'idle' | 'loading-price' | 'ready' | 'creating' | 'paying' | 'verifying' | 'success' | 'pending' | 'error';
 
+type InvoiceSettings = {
+    companyName: string;
+    companyEmail: string;
+    companyLogo: string;
+    footerNote: string;
+    taxEnabled: boolean;
+    taxType: string;
+    taxRate: number;
+    taxLabel: string;
+    taxIncluded: boolean;
+    stampDutyEnabled: boolean;
+    stampDutyThreshold: number;
+    stampDutyAmount: number;
+};
+
+const defaultInvoiceSettings: InvoiceSettings = {
+    companyName: 'PT TaxPrime',
+    companyEmail: 'support@taxindo.ai',
+    companyLogo: '',
+    footerNote: 'Invoice resmi akan diterbitkan secara otomatis setelah pembayaran berhasil dilakukan. Anda dapat mengunduh invoice melalui halaman langganan Anda.',
+    taxEnabled: false,
+    taxType: 'PPN',
+    taxRate: 11,
+    taxLabel: 'PPN 11%',
+    taxIncluded: false,
+    stampDutyEnabled: false,
+    stampDutyThreshold: 5000000,
+    stampDutyAmount: 10000,
+};
+
 export default function PaymentClient() {
     const params = useSearchParams();
     const router = useRouter();
+    const purchaseType = (params.get('type') ?? 'plan') as 'plan' | 'ai-addon';
     const plan = params.get('plan') ?? '';
+    const addon = params.get('addon') ?? '';
     const interval = (params.get('interval') ?? 'MONTHLY') as 'MONTHLY' | 'YEARLY';
+    const isAddonPurchase = purchaseType === 'ai-addon' && !plan;
+    const hasPlan = !!plan;
+    const hasAddon = !!addon;
+    const isCombined = hasPlan && hasAddon;
 
     const [status, setStatus] = useState<Status>('idle');
     const [message, setMessage] = useState('');
     const [price, setPrice] = useState<number | null>(null);
+    const [planPrice, setPlanPrice] = useState<number | null>(null);
+    const [addonPrice, setAddonPrice] = useState<number | null>(null);
     const [invoiceId, setInvoiceId] = useState<string | null>(null);
+    const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>(defaultInvoiceSettings);
+    const [midtransClientKey, setMidtransClientKey] = useState('');
+    const [midtransSnapUrl, setMidtransSnapUrl] = useState('https://app.sandbox.midtrans.com/snap/snap.js');
     const snapLoaded = useRef(false);
     const statusRef = useRef<Status>('idle');
 
@@ -56,41 +98,103 @@ export default function PaymentClient() {
         setStatus(s);
     };
 
-    // Load Snap.js
+    // Fetch Midtrans config then load Snap.js
     useEffect(() => {
-        if (snapLoaded.current || !MIDTRANS_CLIENT_KEY) return;
-        const existing = document.querySelector(`script[src*="snap.js"]`);
-        if (existing) { snapLoaded.current = true; return; }
+        void (async () => {
+            try {
+                const res = await fetch('/api/public/midtrans-config');
+                if (res.ok) {
+                    const data = (await res.json()) as { clientKey: string; isProduction: boolean };
+                    const key = data.clientKey || process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '';
+                    const snapUrl = data.isProduction
+                        ? 'https://app.midtrans.com/snap/snap.js'
+                        : 'https://app.sandbox.midtrans.com/snap/snap.js';
+                    setMidtransClientKey(key);
+                    setMidtransSnapUrl(snapUrl);
 
-        const script = document.createElement('script');
-        script.src = SNAP_JS_URL;
-        script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
-        script.async = true;
-        script.onload = () => { snapLoaded.current = true; };
-        document.head.appendChild(script);
+                    if (snapLoaded.current || !key) return;
+                    const existing = document.querySelector(`script[src*="snap.js"]`);
+                    if (existing) { snapLoaded.current = true; return; }
+                    const script = document.createElement('script');
+                    script.src = snapUrl;
+                    script.setAttribute('data-client-key', key);
+                    script.async = true;
+                    script.onload = () => { snapLoaded.current = true; };
+                    document.head.appendChild(script);
+                }
+            } catch { /* use env fallback */ }
+        })();
     }, []);
 
-    // Fetch price
+    // Fetch invoice settings
     useEffect(() => {
-        if (!plan) return;
+        void (async () => {
+            try {
+                const res = await fetch('/api/public/invoice-settings');
+                if (res.ok) {
+                    const data = (await res.json()) as InvoiceSettings;
+                    setInvoiceSettings(data);
+                }
+            } catch { /* use defaults */ }
+        })();
+    }, []);
+
+    // Fetch price(s)
+    useEffect(() => {
+        if (!plan && !addon) return;
         updateStatus('loading-price');
 
         const load = async () => {
             try {
-                const res = await fetch(`/api/public/plan-prices?plan=${plan}&interval=${interval}`);
-                if (res.ok) {
-                    const data = (await res.json()) as { prices: Array<{ amount: number }> };
-                    const matched = data.prices?.[0];
-                    if (matched) {
-                        setPrice(matched.amount);
+                let pPrice: number | null = null;
+                let aPrice: number | null = null;
+
+                // Fetch plan price if plan selected
+                if (hasPlan) {
+                    const res = await fetch(`/api/public/plan-prices?plan=${plan}&interval=${interval}`);
+                    if (res.ok) {
+                        const data = (await res.json()) as { prices: Array<{ amount: number }> };
+                        pPrice = data.prices?.[0]?.amount ?? null;
+                    }
+                }
+
+                // Fetch addon price if addon selected
+                if (hasAddon) {
+                    const res = await fetch(`/api/public/ai-addon-prices?addon=${addon}&interval=${interval}`);
+                    if (res.ok) {
+                        const data = (await res.json()) as { prices: Array<{ amount: number }> };
+                        aPrice = data.prices?.[0]?.amount ?? null;
+                    }
+                }
+
+                setPlanPrice(pPrice);
+                setAddonPrice(aPrice);
+
+                // Calculate total
+                const total = (pPrice ?? 0) + (aPrice ?? 0);
+                if ((hasPlan && pPrice === null) || (hasAddon && aPrice === null)) {
+                    // Missing a required price
+                    if (hasPlan && pPrice !== null) {
+                        // Plan price found, addon price not — still proceed with plan only
+                        setPrice(pPrice);
+                        updateStatus('ready');
+                    } else if (hasAddon && aPrice !== null && !hasPlan) {
+                        setPrice(aPrice);
+                        updateStatus('ready');
+                    } else if (hasPlan && pPrice !== null && hasAddon && aPrice === null) {
+                        // addon price not set yet, use plan price only
+                        setPrice(pPrice);
                         updateStatus('ready');
                     } else {
                         updateStatus('error');
-                        setMessage('Harga untuk paket ini belum tersedia.');
+                        setMessage('Harga belum tersedia.');
                     }
+                } else if (total > 0) {
+                    setPrice(total);
+                    updateStatus('ready');
                 } else {
                     updateStatus('error');
-                    setMessage('Gagal memuat harga.');
+                    setMessage('Harga belum tersedia.');
                 }
             } catch {
                 updateStatus('error');
@@ -98,7 +202,7 @@ export default function PaymentClient() {
             }
         };
         void load();
-    }, [plan, interval]);
+    }, [plan, addon, interval, hasPlan, hasAddon]);
 
     const handlePay = useCallback(async () => {
         if (statusRef.current !== 'ready' || !price) return;
@@ -106,11 +210,17 @@ export default function PaymentClient() {
         setMessage('');
 
         try {
+            const createBody = isCombined
+                ? { type: 'plan-addon', plan, addon, interval }
+                : isAddonPurchase
+                    ? { type: 'ai-addon', addon, interval }
+                    : { type: 'plan', plan, interval };
+
             const createRes = await fetch('/api/payment/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ plan, interval }),
+                body: JSON.stringify(createBody),
             });
 
             if (createRes.status === 401) {
@@ -139,16 +249,27 @@ export default function PaymentClient() {
                 onSuccess: async () => {
                     updateStatus('verifying');
                     try {
+                        const verifyBody = isCombined
+                            ? { order_id, plan, addon, type: 'plan-addon' }
+                            : isAddonPurchase
+                                ? { order_id, addon, type: 'ai-addon' }
+                                : { order_id, plan, type: 'plan' };
+
                         const verifyRes = await fetch('/api/payment/verify', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',
-                            body: JSON.stringify({ order_id, plan }),
+                            body: JSON.stringify(verifyBody),
                         });
                         const verifyData = (await verifyRes.json()) as { invoiceId?: string };
+                        const successLabel = isCombined
+                            ? `Paket ${planLabels[plan] ?? plan} + ${addonLabels[addon] ?? addon} berhasil diaktifkan!`
+                            : isAddonPurchase
+                                ? `Add-on ${addonLabels[addon] ?? addon} berhasil diaktifkan!`
+                                : `Paket Anda berhasil diupgrade ke ${planLabels[plan] ?? plan}!`;
                         if (verifyRes.ok) {
                             updateStatus('success');
-                            setMessage(`Paket Anda berhasil diupgrade ke ${planLabels[plan] ?? plan}!`);
+                            setMessage(successLabel);
                             if (verifyData.invoiceId) {
                                 setInvoiceId(verifyData.invoiceId);
                                 setTimeout(() => router.push(`/invoice/${verifyData.invoiceId}`), 3000);
@@ -185,13 +306,13 @@ export default function PaymentClient() {
             updateStatus('error');
             setMessage('Terjadi kesalahan. Silakan coba lagi.');
         }
-    }, [plan, interval, price, router]);
+    }, [plan, addon, interval, price, router, isAddonPurchase, isCombined]);
 
-    if (!plan) {
+    if (!plan && !addon) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-text-dark/60 mb-4">Paket tidak ditemukan.</p>
+                    <p className="text-text-dark/60 mb-4">Paket atau add-on tidak ditemukan.</p>
                     <Link href="/pricing" className="text-primary font-semibold hover:underline">
                         ← Kembali ke Harga
                     </Link>
@@ -200,10 +321,26 @@ export default function PaymentClient() {
         );
     }
 
+    const displayLabel = isCombined
+        ? `${planLabels[plan] ?? plan} + ${addonLabels[addon] ?? addon}`
+        : isAddonPurchase
+            ? (addonLabels[addon] ?? addon)
+            : (planLabels[plan] ?? plan);
+
     const isProcessing = status === 'creating' || status === 'paying' || status === 'verifying';
     const today = new Date();
     const formattedDate = today.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const dueDate = new Date(today.getTime() + 24 * 60 * 60 * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Tax & stamp duty calculation
+    const subtotal = price ?? 0;
+    const taxAmount = invoiceSettings.taxEnabled && !invoiceSettings.taxIncluded && subtotal > 0
+        ? Math.round(subtotal * invoiceSettings.taxRate / 100)
+        : 0;
+    const stampDuty = invoiceSettings.stampDutyEnabled && subtotal >= invoiceSettings.stampDutyThreshold
+        ? invoiceSettings.stampDutyAmount
+        : 0;
+    const grandTotal = subtotal + taxAmount + stampDuty;
 
     return (
         <div className="min-h-[80vh] flex items-start justify-center px-4 py-16">
@@ -221,7 +358,7 @@ export default function PaymentClient() {
                     <div className="lg:col-span-3">
                         <div className="rounded-3xl border border-gray-100 bg-white shadow-xl shadow-gray-100/50 overflow-hidden">
                             {/* Invoice Header */}
-                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 px-8 py-6 text-white">
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 px-5 md:px-8 py-5 md:py-6 text-white">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h1 className="text-xl font-bold tracking-tight">Proforma Invoice</h1>
@@ -235,13 +372,13 @@ export default function PaymentClient() {
                                 </div>
                             </div>
 
-                            <div className="px-8 py-6">
+                            <div className="px-4 md:px-8 py-5 md:py-6">
                                 {/* Billing Info */}
-                                <div className="grid grid-cols-2 gap-6 mb-6">
+                                <div className="grid grid-cols-2 gap-3 md:gap-6 mb-5 md:mb-6">
                                     <div>
                                         <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold mb-1">Dari</p>
-                                        <p className="text-sm font-bold text-gray-900">PT TaxPrime</p>
-                                        <p className="text-xs text-gray-500">support@taxindo.ai</p>
+                                        <p className="text-sm font-bold text-gray-900">{invoiceSettings.companyName}</p>
+                                        <p className="text-xs text-gray-500">{invoiceSettings.companyEmail}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold mb-1">Tanggal</p>
@@ -263,25 +400,55 @@ export default function PaymentClient() {
                                         </tr>
                                     </thead>
                                     <tbody className="border-t border-gray-100">
-                                        <tr>
-                                            <td className="py-4">
-                                                <p className="font-semibold text-gray-900">Paket {planLabels[plan] ?? plan}</p>
-                                                <p className="text-xs text-gray-500 mt-0.5">
-                                                    Langganan {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}
-                                                </p>
-                                            </td>
-                                            <td className="py-4 text-center text-gray-600">1</td>
-                                            <td className="py-4 text-right text-gray-600">
-                                                {status === 'loading-price' ? (
-                                                    <span className="inline-block w-16 h-4 bg-gray-100 rounded animate-pulse" />
-                                                ) : price !== null ? formatCurrency(price) : '-'}
-                                            </td>
-                                            <td className="py-4 text-right font-semibold text-gray-900">
-                                                {status === 'loading-price' ? (
-                                                    <span className="inline-block w-20 h-4 bg-gray-100 rounded animate-pulse" />
-                                                ) : price !== null ? formatCurrency(price) : '-'}
-                                            </td>
-                                        </tr>
+                                        {hasPlan && (
+                                            <tr>
+                                                <td className="py-4">
+                                                    <p className="font-semibold text-gray-900">Paket {planLabels[plan] ?? plan}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">Langganan {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
+                                                </td>
+                                                <td className="py-4 text-center text-gray-600">1</td>
+                                                <td className="py-4 text-right text-gray-600">
+                                                    {status === 'loading-price' ? (
+                                                        <span className="inline-block w-16 h-4 bg-gray-100 rounded animate-pulse" />
+                                                    ) : planPrice !== null ? formatCurrency(planPrice) : '-'}
+                                                </td>
+                                                <td className="py-4 text-right font-semibold text-gray-900">
+                                                    {status === 'loading-price' ? (
+                                                        <span className="inline-block w-20 h-4 bg-gray-100 rounded animate-pulse" />
+                                                    ) : planPrice !== null ? formatCurrency(planPrice) : '-'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {hasAddon && hasPlan && addonPrice !== null && addonPrice > 0 && (
+                                            <tr>
+                                                <td className="py-4">
+                                                    <p className="font-semibold text-gray-900">AI Add-on {addonLabels[addon] ?? addon}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">Add-on {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
+                                                </td>
+                                                <td className="py-4 text-center text-gray-600">1</td>
+                                                <td className="py-4 text-right text-gray-600">{formatCurrency(addonPrice)}</td>
+                                                <td className="py-4 text-right font-semibold text-gray-900">{formatCurrency(addonPrice)}</td>
+                                            </tr>
+                                        )}
+                                        {isAddonPurchase && !hasPlan && (
+                                            <tr>
+                                                <td className="py-4">
+                                                    <p className="font-semibold text-gray-900">AI Add-on {addonLabels[addon] ?? addon}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">Add-on {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
+                                                </td>
+                                                <td className="py-4 text-center text-gray-600">1</td>
+                                                <td className="py-4 text-right text-gray-600">
+                                                    {status === 'loading-price' ? (
+                                                        <span className="inline-block w-16 h-4 bg-gray-100 rounded animate-pulse" />
+                                                    ) : price !== null ? formatCurrency(price) : '-'}
+                                                </td>
+                                                <td className="py-4 text-right font-semibold text-gray-900">
+                                                    {status === 'loading-price' ? (
+                                                        <span className="inline-block w-20 h-4 bg-gray-100 rounded animate-pulse" />
+                                                    ) : price !== null ? formatCurrency(price) : '-'}
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
 
@@ -293,16 +460,30 @@ export default function PaymentClient() {
                                         <span>Subtotal</span>
                                         <span>{price !== null ? formatCurrency(price) : '-'}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-gray-500">
-                                        <span>Pajak</span>
-                                        <span>Rp 0</span>
-                                    </div>
+                                    {invoiceSettings.taxEnabled && (
+                                        <div className="flex justify-between text-sm text-gray-500">
+                                            <span>{invoiceSettings.taxLabel}{invoiceSettings.taxIncluded ? ' (sudah termasuk)' : ''}</span>
+                                            <span>{invoiceSettings.taxIncluded ? '—' : (price !== null ? formatCurrency(taxAmount) : '-')}</span>
+                                        </div>
+                                    )}
+                                    {!invoiceSettings.taxEnabled && (
+                                        <div className="flex justify-between text-sm text-gray-500">
+                                            <span>Pajak</span>
+                                            <span>Rp 0</span>
+                                        </div>
+                                    )}
+                                    {invoiceSettings.stampDutyEnabled && subtotal >= invoiceSettings.stampDutyThreshold && (
+                                        <div className="flex justify-between text-sm text-gray-500">
+                                            <span>Bea Meterai</span>
+                                            <span>{formatCurrency(stampDuty)}</span>
+                                        </div>
+                                    )}
                                     <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                                         <span className="font-bold text-gray-900">Total</span>
                                         {status === 'loading-price' ? (
                                             <span className="inline-block w-24 h-6 bg-gray-100 rounded animate-pulse" />
                                         ) : price !== null ? (
-                                            <span className="text-xl font-bold text-primary">{formatCurrency(price)}</span>
+                                            <span className="text-xl font-bold text-primary">{formatCurrency(grandTotal)}</span>
                                         ) : (
                                             <span className="text-sm text-red-500">Tidak tersedia</span>
                                         )}
@@ -310,12 +491,11 @@ export default function PaymentClient() {
                                 </div>
 
                                 {/* Footer Note */}
-                                <div className="mt-6 p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                                    <p className="text-xs text-gray-400 leading-relaxed">
-                                        Invoice resmi akan diterbitkan secara otomatis setelah pembayaran berhasil dilakukan.
-                                        Anda dapat mengunduh invoice melalui halaman langganan Anda.
-                                    </p>
-                                </div>
+                                {invoiceSettings.footerNote && (
+                                    <div className="mt-6 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                        <p className="text-xs text-gray-400 leading-relaxed">{invoiceSettings.footerNote}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -332,10 +512,18 @@ export default function PaymentClient() {
                             <div className="px-6 py-6">
                                 {/* Quick Summary */}
                                 <div className="rounded-2xl bg-slate-50 p-4 mb-5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs text-gray-500">Paket</span>
-                                        <span className="text-sm font-bold text-gray-900">{planLabels[plan] ?? plan}</span>
-                                    </div>
+                                    {hasPlan && (
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs text-gray-500">Paket</span>
+                                            <span className="text-sm font-bold text-gray-900">{planLabels[plan] ?? plan}</span>
+                                        </div>
+                                    )}
+                                    {hasAddon && (
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs text-gray-500">AI Add-on</span>
+                                            <span className="text-sm font-bold text-gray-900">{addonLabels[addon] ?? addon}</span>
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs text-gray-500">Periode</span>
                                         <span className="text-sm font-semibold text-gray-700">
@@ -353,7 +541,7 @@ export default function PaymentClient() {
                                                 </svg>
                                             </div>
                                         ) : price !== null ? (
-                                            <span className="text-lg font-bold text-primary">{formatCurrency(price)}</span>
+                                            <span className="text-lg font-bold text-primary">{formatCurrency(grandTotal)}</span>
                                         ) : (
                                             <span className="text-sm text-red-500">-</span>
                                         )}

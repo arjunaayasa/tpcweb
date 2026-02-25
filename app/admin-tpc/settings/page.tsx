@@ -200,6 +200,25 @@ export default function AdminSettingsPage() {
               </span>
             </label>
           </div>
+          <div className="mt-4">
+            <label className="flex flex-col gap-2 text-sm text-text-dark">
+              URL Frontend (Website Utama)
+              <input
+                className="rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
+                placeholder="http://localhost:3001"
+                value={settings.redirects?.frontendUrl ?? ''}
+                onChange={(event) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    redirects: { ...prev.redirects, frontendUrl: event.target.value },
+                  }))
+                }
+              />
+              <span className="text-xs text-text-dark/40">
+                URL website utama (tpcweb). Digunakan oleh backend untuk redirect ke halaman pricing, profil, dll.
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-primary/20 bg-white p-6">

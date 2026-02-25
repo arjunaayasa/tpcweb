@@ -4,14 +4,19 @@ import { fetchAuthMe, AUTH_BASE_URL, SSO_COOKIE_NAME } from '@/lib/sso';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith('/admin-tpc/login')) {
+  // Allow SSO callback and public login/register redirects
+  if (
+    pathname.startsWith('/api/auth/sso/') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register')
+  ) {
     return NextResponse.next();
   }
 
   const session = request.cookies.get(SSO_COOKIE_NAME)?.value;
 
   if (!session) {
-    const loginUrl = new URL('/admin-tpc/login', request.url);
+    const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -21,7 +26,8 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);
     }
-    if (user.role !== 'ADMIN') {
+    // Only admins can access /admin-tpc
+    if (pathname.startsWith('/admin-tpc') && user.role !== 'ADMIN') {
       const profileUrl = new URL('/my-profile', request.url);
       return NextResponse.redirect(profileUrl);
     }

@@ -6,7 +6,7 @@ import type { SiteSettings } from '@/lib/site-settings';
 import ParticlesBg from './particles-bg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
-import { useSsoToken, appendSsoToken } from '@/lib/use-sso-token';
+
 
 type HeroProps = {
   settings?: SiteSettings['hero'];
@@ -36,10 +36,8 @@ export default function Hero({ settings, redirects }: HeroProps) {
   const [mode, setMode] = useState<HeroMode>('chat');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
-  const ssoToken = useSsoToken();
-
-  const owlieChatUrl = appendSsoToken(redirects?.owlieChat || '#', ssoToken);
-  const taxKnowledgeUrl = appendSsoToken(redirects?.taxKnowledge || '#', ssoToken);
+  const owlieChatUrl = redirects?.owlieChat || '#';
+  const taxKnowledgeUrl = redirects?.taxKnowledge || '#';
 
   const currentPlaceholders = mode === 'chat' ? chatPlaceholders : searchPlaceholders;
 
@@ -85,66 +83,66 @@ export default function Hero({ settings, redirects }: HeroProps) {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-soft-bg to-neutral-light overflow-hidden">
       <ParticlesBg />
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold font-playfair text-text-dark mb-6 animate-fade-up">
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold font-playfair text-text-dark mb-3 sm:mb-6 animate-fade-up">
           {settings?.title ?? 'Intelligent Tax Solutions'}
         </h1>
         <p
-          className="text-xl md:text-2xl text-secondary mb-10 animate-fade-up"
+          className="text-base sm:text-xl md:text-2xl text-secondary mb-5 sm:mb-10 animate-fade-up"
           style={{ animationDelay: '120ms' }}
         >
           {settings?.subtitle ?? 'Powered by TPC AI. Experience the future of consulting.'}
         </p>
 
         <div
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
+          className="flex flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-up"
           style={{ animationDelay: '240ms' }}
         >
           <button
             onClick={() => setMode('chat')}
             className={clsx(
-              "flex items-center gap-3 px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-lg min-w-[200px] justify-center",
+              "flex items-center gap-2 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-sm sm:text-lg flex-1 sm:flex-none sm:min-w-[200px] justify-center",
               mode === 'chat'
                 ? "bg-primary text-white hover:bg-secondary"
                 : "bg-transparent text-primary border border-primary hover:bg-primary hover:text-white backdrop-blur-sm"
             )}
           >
-            <MessageChatSquare className="w-6 h-6" />
-            {settings?.ctaPrimary ?? 'Owlie Chat'}
+            <MessageChatSquare className="w-4 h-4 sm:w-6 sm:h-6 flex-shrink-0" />
+            <span className="truncate">{settings?.ctaPrimary ?? 'Owlie Chat'}</span>
           </button>
 
           <button
             onClick={() => setMode('search')}
             className={clsx(
-              "flex items-center gap-3 px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-lg min-w-[200px] justify-center",
+              "flex items-center gap-2 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold text-sm sm:text-lg flex-1 sm:flex-none sm:min-w-[200px] justify-center",
               mode === 'search'
                 ? "bg-secondary text-white"
                 : "bg-transparent text-secondary border border-secondary hover:bg-secondary hover:text-white backdrop-blur-sm"
             )}
           >
-            <BookOpen01 className="w-6 h-6" />
-            {settings?.ctaSecondary ?? 'Tax Knowledge AI'}
+            <BookOpen01 className="w-4 h-4 sm:w-6 sm:h-6 flex-shrink-0" />
+            <span className="truncate">{settings?.ctaSecondary ?? 'Tax Knowledge AI'}</span>
           </button>
         </div>
 
         <div
-          className="mt-10 w-full max-w-4xl mx-auto animate-fade-up"
+          className="mt-4 sm:mt-10 w-full max-w-4xl mx-auto animate-fade-up"
           style={{ animationDelay: '360ms' }}
         >
           <motion.div
             layout
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             className={clsx(
-              "relative flex flex-col sm:flex-row items-stretch gap-3 rounded-2xl bg-white/95 backdrop-blur-sm shadow-lg overflow-hidden border",
+              "relative flex items-stretch gap-2 sm:gap-3 rounded-2xl bg-white/95 backdrop-blur-sm shadow-lg overflow-hidden border",
               mode === 'chat'
-                ? "px-6 py-6 border-primary/30"
-                : "px-4 py-3 items-center border-secondary/30 ring-1 ring-secondary/20"
+                ? "flex-col sm:flex-row px-4 py-4 sm:px-6 sm:py-6 border-primary/30"
+                : "flex-row px-3 py-2.5 sm:px-4 sm:py-3 items-center border-secondary/30 ring-1 ring-secondary/20"
             )}
           >
             <label className="sr-only" htmlFor="hero-input">
               {mode === 'chat' ? 'Pertanyaan pajak' : 'Cari dokumen'}
             </label>
-            <div className="flex-1 flex items-center gap-3 min-h-[50px]">
+            <div className="flex-1 flex items-center gap-3 min-h-[36px] sm:min-h-[50px]">
               <div className="flex-1 relative text-left">
                 <AnimatePresence mode="wait">
                   {inputValue.length === 0 ? (
@@ -154,7 +152,7 @@ export default function Hero({ settings, redirects }: HeroProps) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute left-0 top-0 text-sm text-text-dark/50 pointer-events-none truncate w-full text-left"
+                      className="absolute left-0 top-0 text-xs sm:text-sm text-text-dark/50 pointer-events-none truncate w-full text-left"
                     >
                       {currentPlaceholders[placeholderIndex]}
                     </motion.span>
@@ -164,11 +162,11 @@ export default function Hero({ settings, redirects }: HeroProps) {
                 {mode === 'chat' ? (
                   <textarea
                     id="hero-input"
-                    rows={3}
+                    rows={2}
                     value={inputValue}
                     onChange={(event) => setInputValue(event.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none resize-none text-left align-top pt-0"
+                    className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none resize-none text-left align-top pt-0 text-sm sm:text-base"
                   />
                 ) : (
                   <input
@@ -177,7 +175,7 @@ export default function Hero({ settings, redirects }: HeroProps) {
                     value={inputValue}
                     onChange={(event) => setInputValue(event.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none h-full"
+                    className="w-full bg-transparent text-text-dark placeholder:text-text-dark/50 focus:outline-none h-full text-sm sm:text-base"
                   />
                 )}
               </div>
@@ -187,14 +185,14 @@ export default function Hero({ settings, redirects }: HeroProps) {
               type="button"
               onClick={handleSubmit}
               className={clsx(
-                "h-11 w-11 rounded-full border transition-colors inline-flex items-center justify-center flex-shrink-0",
+                "h-9 w-9 sm:h-11 sm:w-11 rounded-full border transition-colors inline-flex items-center justify-center flex-shrink-0",
                 mode === 'chat'
-                  ? "border-primary/40 bg-primary text-white hover:bg-secondary hover:border-secondary"
+                  ? "border-primary/40 bg-primary text-white hover:bg-secondary hover:border-secondary self-end sm:self-auto"
                   : "self-center border-secondary/40 bg-secondary text-white hover:bg-secondary/80 hover:border-secondary"
               )}
               aria-label={mode === 'chat' ? "Kirim" : "Cari"}
             >
-              {mode === 'chat' ? <Send01 className="h-4 w-4" /> : <SearchMd className="h-4 w-4" />}
+              {mode === 'chat' ? <Send01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <SearchMd className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
             </motion.button>
           </motion.div>
         </div>

@@ -34,9 +34,55 @@ export const getBackendUrl = async (): Promise<string> => {
   return AUTH_BASE_URL;
 };
 
-export const SSO_APP_ID = process.env.SSO_APP_ID ?? 'tpc-admin';
+/**
+ * Dynamic frontend URL — checks `redirects.frontendUrl` in the DB first,
+ * falls back to the environment variable NEXT_PUBLIC_TPCWEB_URL / localhost.
+ */
+export const getFrontendUrl = async (): Promise<string> => {
+  try {
+    const { prisma } = await import('@/lib/prisma');
+    const row = await prisma.siteSetting.findUnique({ where: { key: 'redirects' } });
+    if (row && row.value && typeof row.value === 'object') {
+      const val = row.value as Record<string, unknown>;
+      const dbUrl = val.frontendUrl as string | undefined;
+      if (dbUrl && (dbUrl.startsWith('https://') || dbUrl.startsWith('http://'))) {
+        return dbUrl.replace(/\/+$/, '');
+      }
+    }
+  } catch {
+    // DB not available — fall through
+  }
+  return process.env.NEXT_PUBLIC_TPCWEB_URL ?? 'http://localhost:3001';
+};
+
+export const SSO_APP_ID = process.env.SSO_APP_ID ?? 'tpcweb';
+
+/** Static fallback — used only when the DB lookup is unavailable. */
 export const SSO_REDIRECT_URI =
-  process.env.SSO_REDIRECT_URI ?? 'http://localhost:3001/login';
+  process.env.SSO_REDIRECT_URI ?? 'http://localhost:3001/api/auth/sso/callback';
+
+/**
+ * Dynamic SSO redirect URI — checks the admin-configured `redirects.frontendUrl`
+ * in the DB first, appends `/api/auth/sso/callback`, then falls back to the
+ * environment variable / localhost.
+ */
+export const getSsoRedirectUri = async (): Promise<string> => {
+  try {
+    const { prisma } = await import('@/lib/prisma');
+    const row = await prisma.siteSetting.findUnique({ where: { key: 'redirects' } });
+    if (row && row.value && typeof row.value === 'object') {
+      const val = row.value as Record<string, unknown>;
+      const dbUrl = val.frontendUrl as string | undefined;
+      if (dbUrl && (dbUrl.startsWith('https://') || dbUrl.startsWith('http://'))) {
+        // Strip trailing slash then append callback path
+        return dbUrl.replace(/\/+$/, '') + '/api/auth/sso/callback';
+      }
+    }
+  } catch {
+    // DB not available — fall through
+  }
+  return SSO_REDIRECT_URI;
+};
 
 export type AuthUser = {
   id: string;
@@ -45,6 +91,9 @@ export type AuthUser = {
   role: 'ADMIN' | 'USER';
   plan?: string | null;
   avatarUrl?: string | null;
+  aiAddon?: string | null;
+  aiAddonExpiry?: string | null;
+  effectiveAddon?: string | null;
 };
 
 type PlanInfo = {
@@ -97,9 +146,10 @@ const getCookieValue = (cookieHeader: string | null, name: string) => {
 
 export const getSSOLoginUrl = async (state?: string) => {
   const base = await getBackendUrl();
+  const redirectUri = await getSsoRedirectUri();
   const url = new URL('/login', base);
   url.searchParams.set('app_id', SSO_APP_ID);
-  url.searchParams.set('redirect_uri', SSO_REDIRECT_URI);
+  url.searchParams.set('redirect_uri', redirectUri);
   if (state) {
     url.searchParams.set('state', state);
   }
@@ -108,9 +158,10 @@ export const getSSOLoginUrl = async (state?: string) => {
 
 export const getSSORegisterUrl = async (state?: string) => {
   const base = await getBackendUrl();
+  const redirectUri = await getSsoRedirectUri();
   const url = new URL('/register', base);
   url.searchParams.set('app_id', SSO_APP_ID);
-  url.searchParams.set('redirect_uri', SSO_REDIRECT_URI);
+  url.searchParams.set('redirect_uri', redirectUri);
   if (state) {
     url.searchParams.set('state', state);
   }

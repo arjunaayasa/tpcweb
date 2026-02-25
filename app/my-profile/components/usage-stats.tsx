@@ -13,26 +13,30 @@ export default function UsageStats({ usage, limits, allowedModels }: UsageStatsP
     ];
 
     const isModelAllowed = (key: string) => {
-        if (!allowedModels || allowedModels.length === 0) return true; // Fallback: allow all if list empty (or should it be none?)
+        if (!allowedModels || allowedModels.length === 0) return false; // No addon / free plan = no access
         return allowedModels.includes(key);
     };
 
+    const isUnlimited = (key: string) => {
+        const limit = limits[key];
+        return limit === null || limit === undefined || limit >= 500;
+    };
+
     const getUsagePercentage = (key: string) => {
-        if (!isModelAllowed(key)) return 100; // Full bar (grayed out?) or 0? 100 usually implies full/blocked if used with red color. Let's use 0 for now or handling in UI.
+        if (!isModelAllowed(key)) return 0;
 
         const used = usage[key] || 0;
         const limit = limits[key];
 
-        if (limit === null || limit === undefined) return 0; // Unlimited
+        if (isUnlimited(key)) return 0; // Unlimited
         if (limit === 0) return 100; // Blocked/Zero limit
 
-        return Math.min(100, (used / limit) * 100);
+        return Math.min(100, (used / (limit as number)) * 100);
     };
 
     const formatLimit = (key: string) => {
-        if (!isModelAllowed(key)) return '0';
-        const limit = limits[key];
-        return limit === null || limit === undefined ? '∞' : limit;
+        if (!isModelAllowed(key)) return 'N/A';
+        return isUnlimited(key) ? 'Unlimited' : limits[key];
     };
 
     return (
@@ -83,10 +87,10 @@ export default function UsageStats({ usage, limits, allowedModels }: UsageStatsP
                         </div>
                         <p className="text-xs text-gray-500">
                             {!isModelAllowed(model.key)
-                                ? <span className="flex items-center gap-1 text-gray-400"><span className="material-icons-round text-[14px]">lock</span> Tidak termasuk dalam paket Anda</span>
-                                : (limits[model.key] === null || limits[model.key] === undefined)
+                                ? <span className="flex items-center gap-1 text-gray-400"><span className="material-icons-round text-[14px]">lock</span> Tidak termasuk dalam paket / AI Add-on Anda.</span>
+                                : isUnlimited(model.key)
                                     ? 'Anda memiliki akses unlimited untuk model ini.'
-                                    : `Sisa kuota: ${(limits[model.key] || 0) - (usage[model.key] || 0)}`
+                                    : `Sisa kuota: ${Math.max(0, (limits[model.key] || 0) - (usage[model.key] || 0))}`
                             }
                         </p>
                     </div>

@@ -15,9 +15,10 @@ type PlansResponse = {
 
 const planOptions = [
   { value: 'FREE', label: 'Gratis' },
-  { value: 'BASIC', label: 'Dasar' },
-  { value: 'PLUS', label: 'Plus' },
-  { value: 'MAX', label: 'Maks' },
+  { value: 'FREE_LOGIN', label: 'Free Plan' },
+  { value: 'UMKM', label: 'UMKM' },
+  { value: 'ENTERPRISE', label: 'Enterprise' },
+  { value: 'MNC', label: 'MNC / Group' },
 ];
 
 const planStyleMap: Record<
@@ -33,6 +34,15 @@ const planStyleMap: Record<
   }
 > = {
   FREE: {
+    card: 'border-slate-200 bg-slate-50',
+    badge: 'bg-slate-100 text-slate-700',
+    title: 'text-slate-900',
+    text: 'text-slate-900/80',
+    meta: 'text-slate-700/70',
+    chip: 'border-slate-200/60 bg-white/80 text-slate-800',
+    divider: 'border-slate-200/60',
+  },
+  FREE_LOGIN: {
     card: 'border-blue-100 bg-blue-50',
     badge: 'bg-blue-100 text-blue-700',
     title: 'text-blue-900',
@@ -41,25 +51,25 @@ const planStyleMap: Record<
     chip: 'border-blue-200/60 bg-white/80 text-blue-800',
     divider: 'border-blue-200/60',
   },
-  BASIC: {
-    card: 'border-blue-200 bg-blue-100',
-    badge: 'bg-blue-200 text-blue-800',
-    title: 'text-blue-900',
-    text: 'text-blue-900/80',
-    meta: 'text-blue-800/70',
-    chip: 'border-blue-300/60 bg-white/70 text-blue-900',
-    divider: 'border-blue-200/70',
+  UMKM: {
+    card: 'border-teal-200 bg-teal-50',
+    badge: 'bg-teal-100 text-teal-700',
+    title: 'text-teal-900',
+    text: 'text-teal-900/80',
+    meta: 'text-teal-700/70',
+    chip: 'border-teal-200/60 bg-white/80 text-teal-800',
+    divider: 'border-teal-200/60',
   },
-  PLUS: {
-    card: 'border-blue-300 bg-blue-200',
-    badge: 'bg-blue-300 text-blue-900',
-    title: 'text-blue-900',
-    text: 'text-blue-900/80',
-    meta: 'text-blue-900/70',
-    chip: 'border-blue-300/70 bg-white/60 text-blue-900',
-    divider: 'border-blue-300/70',
+  ENTERPRISE: {
+    card: 'border-indigo-200 bg-indigo-50',
+    badge: 'bg-indigo-100 text-indigo-700',
+    title: 'text-indigo-900',
+    text: 'text-indigo-900/80',
+    meta: 'text-indigo-700/70',
+    chip: 'border-indigo-200/60 bg-white/80 text-indigo-800',
+    divider: 'border-indigo-200/60',
   },
-  MAX: {
+  MNC: {
     card: 'border-slate-900 bg-slate-900',
     badge: 'bg-white/15 text-white',
     title: 'text-white',
@@ -335,7 +345,7 @@ export default function AdminSubscriptionsPage() {
         {isLoading ? (
           <p className="text-sm text-text-dark/60">Memuat data paket...</p>
         ) : planEntries.length ? (
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {planEntries.map(([key, plan]) => {
               const theme = planStyleMap[key] ?? planStyleMap.FREE;
               return (

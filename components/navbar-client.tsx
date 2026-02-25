@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSsoToken, appendSsoToken } from '@/lib/use-sso-token';
+import { AnimatePresence, motion } from 'framer-motion';
+
+
+import { createPortal } from 'react-dom';
 
 type NavbarUser = {
   name?: string | null;
@@ -34,10 +37,11 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isFiturOpen, setIsFiturOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const fiturRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const ssoToken = useSsoToken();
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,10 +95,11 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
         }`}
     >
       <div className="relative container mx-auto px-6 py-4 flex items-center">
-        <div className="text-xl font-bold tracking-tight">
+        <div className="text-xl font-bold tracking-tight shrink-0">
           Taxindo Prime Consulting
         </div>
 
+        {/* Desktop nav links */}
         <div className="hidden md:flex gap-8 absolute left-1/2 -translate-x-1/2">
           <a href="/#home" className={`cursor-pointer transition-colors ${linkHover}`}>Beranda</a>
 
@@ -125,7 +130,7 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
               >
                 <div className="flex flex-col py-2">
                   <a
-                    href={appendSsoToken(redirects?.owlieChat || '#', ssoToken)}
+                    href={redirects?.owlieChat || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsFiturOpen(false)}
@@ -145,7 +150,7 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
                     </div>
                   </a>
                   <a
-                    href={appendSsoToken(redirects?.taxKnowledge || '#', ssoToken)}
+                    href={redirects?.taxKnowledge || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsFiturOpen(false)}
@@ -172,10 +177,11 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
           <a href="/#products" className={`cursor-pointer transition-colors ${linkHover}`}>Produk</a>
           <a href="/#testimonials" className={`cursor-pointer transition-colors ${linkHover}`}>Testimoni</a>
           <a href="/#pricing" className={`cursor-pointer transition-colors ${linkHover}`}>Harga</a>
+          <a href="/ai-models" className={`cursor-pointer transition-colors ${linkHover}`}>Model AI</a>
           <a href="/#faq" className={`cursor-pointer transition-colors ${linkHover}`}>Tanya Jawab</a>
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2">
           {user ? (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -246,20 +252,116 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
             <>
               <Link
                 href="/login"
-                className={`rounded-full border px-5 py-2 text-sm font-semibold shadow-sm transition-colors animate-pulse-ring ${trialClasses}`}
+                className={`hidden sm:inline-flex rounded-full border px-5 py-2 text-sm font-semibold shadow-sm transition-colors animate-pulse-ring ${trialClasses}`}
               >
                 Coba Gratis
               </Link>
               <Link
                 href="/login"
-                className={`rounded-full border px-5 py-2 text-sm font-semibold transition-colors ${loginClasses}`}
+                className={`hidden sm:inline-flex rounded-full border px-5 py-2 text-sm font-semibold transition-colors ${loginClasses}`}
               >
                 Login
               </Link>
             </>
           )}
+
+          {/* Hamburger button — mobile only */}
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg transition-colors"
+            onClick={() => setIsMobileMenuOpen((p) => !p)}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+{/* Use value to force re-render when mounted */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                key="backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
+              {/* Sidebar */}
+              <motion.div
+                key="sidebar"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ 
+                  position: 'fixed', 
+                  top: 0, 
+                  right: 0, 
+                  bottom: 0, 
+                  width: 280, 
+                  zIndex: 9999, 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  backgroundColor: isScrolled ? '#1e293b' : '#ffffff' 
+                }}
+                className={`shadow-2xl text-sm font-medium ${
+                  isScrolled ? 'text-white' : 'text-text-dark'
+                }`}
+              >
+                {/* Header sidebar */}
+                <div className={`flex-shrink-0 flex items-center justify-between px-6 py-4 border-b ${isScrolled ? 'border-white/10' : 'border-slate-100'}`}>
+                  <span className="font-bold text-base">Menu</span>
+                  <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Tutup menu">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className={`flex flex-col gap-1 px-6 py-4 flex-1 overflow-y-auto ${isScrolled ? 'text-white' : 'text-text-dark'}`}>
+                <a href="/#home" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Beranda</a>
+                <a href={redirects?.owlieChat || '#'} target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10 flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 opacity-60" fill="none" stroke="currentColor" strokeWidth={1.8}><path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  Owlie Chat
+                </a>
+                <a href={redirects?.taxKnowledge || '#'} target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10 flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 opacity-60" fill="none" stroke="currentColor" strokeWidth={1.8}><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+                  Tax Knowledge AI
+                </a>
+                <a href="/#products" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Produk</a>
+                <a href="/#testimonials" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Testimoni</a>
+                <a href="/#pricing" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Harga</a>
+                <a href="/ai-models" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Model AI</a>
+                <a href="/#faq" onClick={() => setIsMobileMenuOpen(false)} className="py-3">Tanya Jawab</a>
+                {!user && (
+                  <div className="flex gap-3 pt-4">
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className={`flex-1 text-center rounded-full border px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors ${trialClasses}`}>
+                      Coba Gratis
+                    </Link>
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className={`flex-1 text-center rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors ${loginClasses}`}>
+                      Login
+                    </Link>
+                  </div>
+                )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </nav>
   );
 }
