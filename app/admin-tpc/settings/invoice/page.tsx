@@ -95,13 +95,13 @@ export default function InvoiceSettingsPage() {
             {type === 'textarea' ? (
                 <textarea
                     className="min-h-[90px] rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
-                    value={settings[key]}
+                    value={String(settings[key] ?? '')}
                     onChange={(e) => setSettings((prev) => ({ ...prev, [key]: e.target.value }))}
                 />
             ) : (
                 <input
                     className="rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
-                    value={settings[key]}
+                    value={String(settings[key] ?? '')}
                     onChange={(e) => setSettings((prev) => ({ ...prev, [key]: e.target.value }))}
                 />
             )}
