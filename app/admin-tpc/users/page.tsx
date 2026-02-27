@@ -39,6 +39,7 @@ export default function AdminUsersPage() {
   const [planForm, setPlanForm] = useState({
     userId: '',
     plan: 'FREE',
+    email: '',
   });
   const [planStatus, setPlanStatus] = useState('');
   const [planResult, setPlanResult] = useState<ChangePlanResult | null>(null);
@@ -112,6 +113,7 @@ export default function AdminUsersPage() {
       ...prev,
       userId: user.id,
       plan: user.plan ?? prev.plan,
+      email: user.email,
     }));
     setIsPlanOpen(true);
   };
@@ -170,11 +172,11 @@ export default function AdminUsersPage() {
     try {
       const payload: Record<string, string> = {
         plan: planForm.plan,
-        userId: planForm.userId,
+        email: planForm.email,
       };
 
-      const res = await fetch('/api/billing/change-plan', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/users/${planForm.userId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload),
@@ -184,19 +186,19 @@ export default function AdminUsersPage() {
         if (res.status === 404) {
           setPlanStatus('Pengguna tidak ditemukan.');
         } else if (res.status === 401) {
-          setPlanStatus('Tidak memiliki akses untuk mengubah paket.');
+          setPlanStatus('Tidak memiliki akses untuk mengubah pengguna.');
         } else {
-          setPlanStatus('Gagal memperbarui paket.');
+          setPlanStatus('Gagal memperbarui pengguna.');
         }
         return;
       }
 
       const data = (await res.json()) as ChangePlanResult;
       setPlanResult(data);
-      setPlanStatus('Paket pengguna berhasil diperbarui.');
+      setPlanStatus('Data pengguna berhasil diperbarui.');
       await loadUsers();
     } catch {
-      setPlanStatus('Tidak bisa terhubung ke layanan billing.');
+      setPlanStatus('Tidak bisa terhubung ke layanan admin.');
     } finally {
       setIsUpdating(false);
     }
@@ -210,12 +212,14 @@ export default function AdminUsersPage() {
         ...prev,
         userId: user.id,
         plan: user.plan ?? prev.plan,
+        email: user.email,
       }));
     } else {
       setSelectedUser(null);
       setPlanForm((prev) => ({
         ...prev,
         userId: '',
+        email: '',
       }));
     }
     setPlanStatus('');
@@ -559,6 +563,7 @@ export default function AdminUsersPage() {
                             ...prev,
                             userId: user.id,
                             plan: user.plan ?? prev.plan,
+                            email: user.email,
                           }));
                         }}
                         className={`w-full rounded-xl border px-3 py-2 text-left text-sm ${
@@ -588,6 +593,15 @@ export default function AdminUsersPage() {
                     <p className="mt-2 text-sm text-text-dark/60">Belum ada pengguna dipilih.</p>
                   )}
                 </div>
+                <label className="flex flex-col gap-2 text-sm text-text-dark">
+                  Email
+                  <input
+                    className="rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm text-text-dark"
+                    type="email"
+                    value={planForm.email}
+                    onChange={(event) => setPlanForm((prev) => ({ ...prev, email: event.target.value }))}
+                  />
+                </label>
                 <label className="flex flex-col gap-2 text-sm text-text-dark">
                   Paket
                   <select

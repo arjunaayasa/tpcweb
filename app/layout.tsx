@@ -21,6 +21,33 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Taxindo Prime Consulting | AI-Powered Tax Solutions",
   description: "Professional tax consulting enhanced by TPC AI. Chat with Owlie and explore tax laws.",
+  openGraph: {
+    title: "Taxindo Prime Consulting | AI-Powered Tax Solutions",
+    description: "Professional tax consulting enhanced by TPC AI. Chat with Owlie and explore tax laws.",
+    url: "https://taxindoprime.com",
+    siteName: "Taxindo Prime Consulting",
+    images: [
+      {
+        url: "/logoowliechat.png",
+        width: 800,
+        height: 800,
+        alt: "Taxindo Prime Consulting Logo",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Taxindo Prime Consulting | AI-Powered Tax Solutions",
+    description: "Professional tax consulting enhanced by TPC AI. Chat with Owlie and explore tax laws.",
+    images: ["/logoowliechat.png"],
+  },
+  icons: {
+    icon: "/logoowliechat.png",
+    shortcut: "/logoowliechat.png",
+    apple: "/logoowliechat.png",
+  },
 };
 
 export default function RootLayout({
