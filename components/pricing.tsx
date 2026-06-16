@@ -14,98 +14,130 @@ type Interval = 'MONTHLY' | 'YEARLY';
 
 const planOrder = ['FREE_LOGIN', 'STUDENT', 'UMKM', 'ENTERPRISE', 'UNLIMITED', 'MNC'] as const;
 
-const planMeta: Record<
-    string,
-    {
-        label: string;
-        description: string;
-        features: string[];
-        accent: string;
-        bg: string;
-        border: string;
-        badge: string;
-        cta: string;
-        ctaHover: string;
-        popular?: boolean;
-    }
-> = {
+/** Sales contact for the enterprise (MNC/Group) plan. */
+const MNC_CONTACT_HREF =
+    'mailto:sales@taxindo.ai?subject=' + encodeURIComponent('Permintaan Paket MNC / Group - TPC AI');
+
+type PlanMeta = {
+    label: string;
+    description: string;
+    /** Short headline shown above the price. */
+    tagline: string;
+    features: string[];
+    /** Heroicons-style outline path(s). */
+    icon: string;
+    accent: string;
+    bg: string;
+    border: string;
+    badge: string;
+    iconWrap: string;
+    cta: string;
+    glow: string;
+    popular?: boolean;
+    /** MNC/Group is enterprise-only — no public price, contact sales. */
+    contactOnly?: boolean;
+};
+
+const planMeta: Record<string, PlanMeta> = {
     FREE: {
         label: 'Gratis',
         description: 'Coba langsung tanpa akun',
+        tagline: 'Tanpa biaya',
         features: ['Akses Tax Knowledge terbatas', 'Tanpa login'],
+        icon: 'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z',
         accent: 'text-slate-700',
         bg: 'bg-white',
         border: 'border-slate-200',
         badge: 'bg-slate-100 text-slate-600',
+        iconWrap: 'bg-slate-100 text-slate-600',
         cta: 'bg-slate-800 text-white hover:bg-slate-700',
-        ctaHover: 'hover:shadow-slate-200/50',
+        glow: 'hover:shadow-slate-200/60',
     },
     FREE_LOGIN: {
-        label: 'Free Plan',
+        label: 'Free',
         description: 'Gratis, cukup daftar akun',
-        features: ['Akses Owlie Lite', 'Akses Tax Knowledge lengkap', 'Riwayat percakapan'],
-        accent: 'text-blue-700',
-        bg: 'bg-gradient-to-br from-blue-50 to-white',
-        border: 'border-blue-200',
-        badge: 'bg-blue-100 text-blue-700',
+        tagline: 'Mulai gratis',
+        features: ['Akses Owlie Lite', 'Tax Knowledge lengkap', 'Riwayat percakapan tersimpan'],
+        icon: 'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z',
+        accent: 'text-blue-600',
+        bg: 'bg-white',
+        border: 'border-slate-200',
+        badge: 'bg-blue-50 text-blue-600',
+        iconWrap: 'bg-blue-50 text-blue-600',
         cta: 'bg-blue-600 text-white hover:bg-blue-500',
-        ctaHover: 'hover:shadow-blue-200/50',
+        glow: 'hover:shadow-blue-200/50',
     },
     STUDENT: {
         label: 'Student',
-        description: 'Untuk pelajar & mahasiswa (perlu verifikasi KYC)',
-        features: ['Akses Owlie Lite + Chat', 'Akses Tax Knowledge lengkap', 'Riwayat percakapan', 'Perlu verifikasi status pelajar'],
-        accent: 'text-emerald-700',
-        bg: 'bg-gradient-to-br from-emerald-50 via-white to-teal-50',
-        border: 'border-emerald-200',
-        badge: 'bg-emerald-100 text-emerald-700',
+        description: 'Untuk pelajar & mahasiswa',
+        tagline: 'Perlu verifikasi KYC',
+        features: ['Akses Owlie Lite + Chat', 'Tax Knowledge lengkap', 'Riwayat percakapan', 'Verifikasi status pelajar'],
+        icon: 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5',
+        accent: 'text-emerald-600',
+        bg: 'bg-white',
+        border: 'border-slate-200',
+        badge: 'bg-emerald-50 text-emerald-600',
+        iconWrap: 'bg-emerald-50 text-emerald-600',
         cta: 'bg-emerald-600 text-white hover:bg-emerald-500',
-        ctaHover: 'hover:shadow-emerald-200/50',
+        glow: 'hover:shadow-emerald-200/50',
     },
     UMKM: {
         label: 'UMKM',
-        description: 'Untuk pelaku usaha & konsultan pajak',
+        description: 'Untuk pelaku usaha & konsultan',
+        tagline: 'Paling populer',
         features: ['Akses Owlie Lite + Chat + Pro', 'Koleksi dokumen pajak domestik', 'Riwayat percakapan', 'Dukungan email'],
+        icon: 'M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z',
         accent: 'text-primary',
-        bg: 'bg-gradient-to-br from-teal-50 via-white to-cyan-50',
-        border: 'border-primary/30 ring-2 ring-primary/10',
+        bg: 'bg-white',
+        border: 'border-primary',
         badge: 'bg-primary/10 text-primary',
+        iconWrap: 'bg-primary/10 text-primary',
         cta: 'bg-primary text-white hover:bg-secondary',
-        ctaHover: 'hover:shadow-primary/20',
+        glow: 'hover:shadow-primary/25',
         popular: true,
     },
     ENTERPRISE: {
         label: 'Enterprise',
         description: 'Untuk perusahaan & tim besar',
+        tagline: 'Untuk tim',
         features: ['Akses Owlie Lite + Chat + Pro', 'Koleksi dokumen pajak domestik', 'Prioritas respons', 'Dukungan prioritas'],
-        accent: 'text-indigo-700',
-        bg: 'bg-gradient-to-br from-indigo-50 via-white to-violet-50',
-        border: 'border-indigo-200',
-        badge: 'bg-indigo-100 text-indigo-700',
+        icon: 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z',
+        accent: 'text-indigo-600',
+        bg: 'bg-white',
+        border: 'border-slate-200',
+        badge: 'bg-indigo-50 text-indigo-600',
+        iconWrap: 'bg-indigo-50 text-indigo-600',
         cta: 'bg-indigo-600 text-white hover:bg-indigo-500',
-        ctaHover: 'hover:shadow-indigo-200/50',
+        glow: 'hover:shadow-indigo-200/50',
     },
     UNLIMITED: {
         label: 'Corporate Unlimited',
-        description: 'Untuk korporasi dengan kebutuhan tinggi',
-        features: ['Akses semua model termasuk Owlie Max', 'Semua koleksi dokumen', 'Pajak domestik & internasional', 'Kuota gabungan besar', 'Dukungan prioritas'],
-        accent: 'text-amber-700',
-        bg: 'bg-gradient-to-br from-amber-50 via-white to-orange-50',
+        description: 'Untuk korporasi kebutuhan tinggi',
+        tagline: 'Kuota terbesar',
+        features: ['Semua model termasuk Owlie Max', 'Semua koleksi dokumen', 'Pajak domestik & internasional', 'Kuota gabungan besar', 'Dukungan prioritas'],
+        icon: 'M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0',
+        accent: 'text-amber-600',
+        bg: 'bg-white',
         border: 'border-amber-200',
-        badge: 'bg-amber-100 text-amber-700',
-        cta: 'bg-amber-600 text-white hover:bg-amber-500',
-        ctaHover: 'hover:shadow-amber-200/50',
+        badge: 'bg-amber-50 text-amber-600',
+        iconWrap: 'bg-amber-50 text-amber-600',
+        cta: 'bg-amber-500 text-white hover:bg-amber-400',
+        glow: 'hover:shadow-amber-200/50',
     },
     MNC: {
         label: 'MNC / Group',
         description: 'Untuk korporasi multinasional & grup',
-        features: ['Akses semua model termasuk Owlie Max', 'Organisasi multi-pengguna (multi-seat)', 'Pajak domestik & internasional', 'Dukungan prioritas 24/7', 'Account manager khusus'],
+        tagline: 'Solusi enterprise',
+        features: ['Semua model termasuk Owlie Max', 'Organisasi multi-pengguna (multi-seat)', 'Pajak domestik & internasional', 'Account manager khusus', 'Dukungan prioritas 24/7'],
+        icon: 'M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418',
         accent: 'text-white',
         bg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
         border: 'border-slate-700',
-        badge: 'bg-white/15 text-white/90',
+        badge: 'bg-white/10 text-white/90',
+        iconWrap: 'bg-white/10 text-white',
         cta: 'bg-white text-slate-900 hover:bg-slate-100',
-        ctaHover: 'hover:shadow-white/10',
+        glow: 'hover:shadow-white/10',
+        contactOnly: true,
     },
 };
 
@@ -115,6 +147,12 @@ const formatCurrency = (amount: number) =>
 const CheckIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+);
+
+const PlanIcon = ({ path, className }: { path: string; className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+        <path strokeLinecap="round" strokeLinejoin="round" d={path} />
     </svg>
 );
 
@@ -180,13 +218,13 @@ export default function Pricing({ compact = false }: PricingProps) {
 
             <div className="relative z-10 container mx-auto px-6">
                 {/* Header */}
-                <div className="text-center max-w-2xl mx-auto mb-16">
+                <div className="text-center max-w-2xl mx-auto mb-14">
                     <p className="text-xs uppercase tracking-[0.4em] text-secondary font-semibold mb-3">Pricing</p>
                     <h2 className="text-4xl md:text-5xl font-bold font-playfair text-text-dark mb-4">
                         Pilih Paket Terbaik
                     </h2>
                     <p className="text-lg text-text-dark/60">
-                        Mulai gratis, upgrade kapan saja.
+                        Mulai gratis, upgrade kapan saja. Harga transparan tanpa biaya tersembunyi.
                     </p>
                 </div>
 
@@ -197,8 +235,8 @@ export default function Pricing({ compact = false }: PricingProps) {
                             type="button"
                             onClick={() => setInterval('MONTHLY')}
                             className={`relative z-10 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${interval === 'MONTHLY'
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                    : 'text-text-dark/60 hover:text-text-dark'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                : 'text-text-dark/60 hover:text-text-dark'
                                 }`}
                         >
                             Bulanan
@@ -207,8 +245,8 @@ export default function Pricing({ compact = false }: PricingProps) {
                             type="button"
                             onClick={() => setInterval('YEARLY')}
                             className={`relative z-10 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${interval === 'YEARLY'
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                    : 'text-text-dark/60 hover:text-text-dark'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                : 'text-text-dark/60 hover:text-text-dark'
                                 }`}
                         >
                             Tahunan
@@ -231,33 +269,39 @@ export default function Pricing({ compact = false }: PricingProps) {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto items-stretch">
                         {planOrder.map((plan) => {
                             const meta = planMeta[plan];
                             const planPrice = getPrice(plan);
                             const isDark = plan === 'MNC';
                             const isFree = plan === 'FREE_LOGIN';
                             const isStudent = plan === 'STUDENT';
-                            const isMnc = plan === 'MNC';
+                            const contactOnly = !!meta.contactOnly;
 
-                            // Build CTA href
+                            // Build CTA href + label
                             let ctaHref: string;
+                            let ctaLabel: string;
                             if (isFree) {
                                 ctaHref = '/register';
+                                ctaLabel = 'Mulai Gratis';
                             } else if (isStudent) {
-                                ctaHref = studentEligible
-                                    ? `/payment?plan=STUDENT&interval=${interval}`
-                                    : '/kyc';
-                            } else if (isMnc) {
-                                ctaHref = '/checkout/organization';
-                            } else {
+                                ctaHref = studentEligible ? `/payment?plan=STUDENT&interval=${interval}` : '/kyc';
+                                ctaLabel = studentEligible ? 'Berlangganan' : 'Verifikasi KYC';
+                            } else if (contactOnly) {
+                                ctaHref = MNC_CONTACT_HREF;
+                                ctaLabel = 'Hubungi Kami';
+                            } else if (planPrice !== null) {
                                 ctaHref = `/payment?plan=${plan}&interval=${interval}`;
+                                ctaLabel = 'Berlangganan';
+                            } else {
+                                ctaHref = '/login';
+                                ctaLabel = 'Hubungi Kami';
                             }
 
                             return (
                                 <div
                                     key={plan}
-                                    className={`relative flex flex-col rounded-3xl border p-6 shadow-sm transition-all duration-300 hover:shadow-xl ${meta.ctaHover} ${meta.bg} ${meta.border}`}
+                                    className={`group relative flex flex-col rounded-3xl border p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.glow} ${meta.bg} ${meta.border} ${meta.popular ? 'lg:scale-[1.03] shadow-lg ring-1 ring-primary/20' : ''}`}
                                 >
                                     {meta.popular ? (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -267,86 +311,71 @@ export default function Pricing({ compact = false }: PricingProps) {
                                         </div>
                                     ) : null}
 
-                                    <div className="mb-6">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${meta.badge}`}>
+                                    {/* Icon + label */}
+                                    <div className="mb-5 flex items-center gap-3">
+                                        <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${meta.iconWrap}`}>
+                                            <PlanIcon path={meta.icon} className="h-6 w-6" />
+                                        </span>
+                                        <div>
+                                            <h3 className={`text-lg font-bold leading-tight ${isDark ? 'text-white' : 'text-text-dark'}`}>
                                                 {meta.label}
-                                            </span>
+                                            </h3>
+                                            <p className={`text-[11px] font-semibold uppercase tracking-wide ${isDark ? 'text-white/50' : 'text-text-dark/40'}`}>
+                                                {meta.tagline}
+                                            </p>
                                         </div>
-                                        <p className={`mt-3 text-sm ${isDark ? 'text-white/60' : 'text-text-dark/60'}`}>
-                                            {meta.description}
-                                        </p>
                                     </div>
 
+                                    <p className={`mb-5 text-sm ${isDark ? 'text-white/60' : 'text-text-dark/60'}`}>
+                                        {meta.description}
+                                    </p>
+
                                     {/* Price */}
-                                    <div className="mb-6 min-h-[72px]">
+                                    <div className="mb-6 min-h-[64px]">
                                         {isFree ? (
-                                            <div className={`text-3xl font-bold ${meta.accent}`}>
-                                                Gratis
-                                            </div>
+                                            <div className={`text-3xl font-bold ${meta.accent}`}>Gratis</div>
+                                        ) : contactOnly ? (
+                                            <>
+                                                <div className={`text-2xl font-bold ${meta.accent}`}>Custom</div>
+                                                <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-text-dark/50'}`}>
+                                                    Harga sesuai kebutuhan perusahaan
+                                                </p>
+                                            </>
                                         ) : planPrice !== null ? (
                                             <>
-                                                <div className={`text-2xl lg:text-3xl font-bold ${meta.accent} break-words leading-tight transition-all`}>
-                                                    {formatCurrency(planPrice)}
+                                                <div className="flex items-end gap-1">
+                                                    <span className={`text-3xl font-bold leading-none ${meta.accent}`}>
+                                                        {formatCurrency(planPrice)}
+                                                    </span>
                                                 </div>
-                                                <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-text-dark/50'}`}>
-                                                    / {interval === 'MONTHLY' ? 'bulan' : 'tahun'}
+                                                <p className={`text-xs mt-1.5 ${isDark ? 'text-white/50' : 'text-text-dark/50'}`}>
+                                                    per {interval === 'MONTHLY' ? 'bulan' : 'tahun'}
                                                 </p>
                                             </>
                                         ) : (
-                                            <div className={`text-xl font-bold ${meta.accent}`}>
-                                                Hubungi Kami
-                                            </div>
+                                            <div className={`text-xl font-bold ${meta.accent}`}>Hubungi Kami</div>
                                         )}
                                     </div>
 
                                     {/* Features */}
-                                    <ul className={`flex-1 space-y-3 text-sm mb-6 ${isDark ? 'text-white/80' : 'text-text-dark/70'}`}>
+                                    <ul className={`flex-1 space-y-3 text-sm mb-7 ${isDark ? 'text-white/80' : 'text-text-dark/70'}`}>
                                         {meta.features.map((feat) => (
-                                            <li key={feat} className="flex items-start gap-2">
-                                                <CheckIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-white/60' : 'text-secondary'}`} />
+                                            <li key={feat} className="flex items-start gap-2.5">
+                                                <span className={`mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${isDark ? 'bg-white/15' : 'bg-secondary/10'}`}>
+                                                    <CheckIcon className={`h-3 w-3 ${isDark ? 'text-white' : 'text-secondary'}`} />
+                                                </span>
                                                 {feat}
                                             </li>
                                         ))}
                                     </ul>
 
                                     {/* CTA */}
-                                    {isFree ? (
-                                        <Link
-                                            href={ctaHref}
-                                            className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
-                                        >
-                                            Mulai Gratis
-                                        </Link>
-                                    ) : isStudent && !studentEligible ? (
-                                        <Link
-                                            href={ctaHref}
-                                            className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
-                                        >
-                                            Verifikasi KYC
-                                        </Link>
-                                    ) : isMnc ? (
-                                        <Link
-                                            href={ctaHref}
-                                            className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
-                                        >
-                                            Buat Organisasi
-                                        </Link>
-                                    ) : planPrice !== null ? (
-                                        <Link
-                                            href={ctaHref}
-                                            className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
-                                        >
-                                            Berlangganan
-                                        </Link>
-                                    ) : (
-                                        <Link
-                                            href="/login"
-                                            className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
-                                        >
-                                            Hubungi Kami
-                                        </Link>
-                                    )}
+                                    <Link
+                                        href={ctaHref}
+                                        className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
+                                    >
+                                        {ctaLabel}
+                                    </Link>
                                 </div>
                             );
                         })}
