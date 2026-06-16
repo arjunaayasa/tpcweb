@@ -209,7 +209,7 @@ export default function Pricing({ compact = false }: PricingProps) {
     };
 
     // Standard vertical plan card (Free, Student, UMKM, Enterprise, Unlimited).
-    const renderCard = (plan: string) => {
+    const renderCard = (plan: string, compact = false) => {
         const meta = planMeta[plan];
         const planPrice = getPrice(plan);
         const isFree = plan === 'FREE_LOGIN';
@@ -234,7 +234,7 @@ export default function Pricing({ compact = false }: PricingProps) {
         return (
             <div
                 key={plan}
-                className={`group relative flex flex-col rounded-3xl border p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.glow} ${meta.bg} ${meta.border} ${meta.popular ? 'lg:scale-[1.03] shadow-lg ring-1 ring-primary/20' : ''}`}
+                className={`group relative flex flex-col rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.glow} ${meta.bg} ${meta.border} ${compact ? 'p-5' : 'p-7'} ${meta.popular ? 'lg:scale-[1.03] shadow-lg ring-1 ring-primary/20' : ''}`}
             >
                 {meta.popular ? (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -244,34 +244,34 @@ export default function Pricing({ compact = false }: PricingProps) {
                     </div>
                 ) : null}
 
-                <div className="mb-5 flex items-center gap-3">
-                    <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${meta.iconWrap}`}>
-                        <PlanIcon path={meta.icon} className="h-6 w-6" />
+                <div className={`flex items-center gap-3 ${compact ? 'mb-3' : 'mb-5'}`}>
+                    <span className={`inline-flex items-center justify-center rounded-2xl ${meta.iconWrap} ${compact ? 'h-9 w-9' : 'h-11 w-11'}`}>
+                        <PlanIcon path={meta.icon} className={compact ? 'h-5 w-5' : 'h-6 w-6'} />
                     </span>
                     <div>
-                        <h3 className="text-lg font-bold leading-tight text-text-dark">{meta.label}</h3>
+                        <h3 className={`font-bold leading-tight text-text-dark ${compact ? 'text-base' : 'text-lg'}`}>{meta.label}</h3>
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dark/40">{meta.tagline}</p>
                     </div>
                 </div>
 
-                <p className="mb-5 text-sm text-text-dark/60">{meta.description}</p>
+                {!compact && <p className="mb-5 text-sm text-text-dark/60">{meta.description}</p>}
 
-                <div className="mb-6 min-h-[64px]">
+                <div className={compact ? 'mb-4 min-h-[48px]' : 'mb-6 min-h-[64px]'}>
                     {isFree ? (
-                        <div className={`text-3xl font-bold ${meta.accent}`}>Gratis</div>
+                        <div className={`font-bold ${meta.accent} ${compact ? 'text-2xl' : 'text-3xl'}`}>Gratis</div>
                     ) : planPrice !== null ? (
                         <>
                             <div className="flex items-end gap-1">
-                                <span className={`text-3xl font-bold leading-none ${meta.accent}`}>{formatCurrency(planPrice)}</span>
+                                <span className={`font-bold leading-none ${meta.accent} ${compact ? 'text-2xl' : 'text-3xl'}`}>{formatCurrency(planPrice)}</span>
                             </div>
                             <p className="text-xs mt-1.5 text-text-dark/50">per {interval === 'MONTHLY' ? 'bulan' : 'tahun'}</p>
                         </>
                     ) : (
-                        <div className={`text-xl font-bold ${meta.accent}`}>Hubungi Kami</div>
+                        <div className={`font-bold ${meta.accent} ${compact ? 'text-lg' : 'text-xl'}`}>Hubungi Kami</div>
                     )}
                 </div>
 
-                <ul className="flex-1 space-y-3 text-sm mb-7 text-text-dark/70">
+                <ul className={`flex-1 text-text-dark/70 ${compact ? 'space-y-1.5 text-[13px] mb-5' : 'space-y-3 text-sm mb-7'}`}>
                     {meta.features.map((feat) => (
                         <li key={feat} className="flex items-start gap-2.5">
                             <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-secondary/10">
@@ -282,7 +282,7 @@ export default function Pricing({ compact = false }: PricingProps) {
                     ))}
                 </ul>
 
-                <Link href={ctaHref} className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}>
+                <Link href={ctaHref} className={`block w-full rounded-xl text-center text-sm font-bold transition-all shadow-sm ${meta.cta} ${compact ? 'py-2.5' : 'py-3'}`}>
                     {ctaLabel}
                 </Link>
             </div>
@@ -394,8 +394,8 @@ export default function Pricing({ compact = false }: PricingProps) {
                     <div className="mx-auto max-w-6xl space-y-6">
                         {/* Top row: Free + Student side by side */}
                         <div className="mx-auto grid max-w-3xl items-stretch gap-6 sm:grid-cols-2">
-                            {renderCard('FREE_LOGIN')}
-                            {renderCard('STUDENT')}
+                            {renderCard('FREE_LOGIN', true)}
+                            {renderCard('STUDENT', true)}
                         </div>
 
                         {/* Main row: the three primary plans */}
