@@ -1,4 +1,4 @@
-import { fetchOrgInfo } from '@/lib/org-types';
+import { fetchOrgInfo } from '@/lib/org-server';
 
 export const dynamic = 'force-dynamic';
 

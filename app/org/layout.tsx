@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { fetchAuthProfile } from '@/lib/sso';
-import { fetchOrgInfo } from '@/lib/org-types';
+import { fetchOrgInfo } from '@/lib/org-server';
 import OrgShell from '@/components/org/org-shell';
 
 /**

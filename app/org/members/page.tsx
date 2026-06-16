@@ -1,4 +1,4 @@
-import { fetchOrgInfo, fetchOrgUsage } from '@/lib/org-types';
+import { fetchOrgInfo, fetchOrgUsage } from '@/lib/org-server';
 import MembersClient from './members-client';
 
 export const dynamic = 'force-dynamic';

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fetchOrgInfo, fetchOrgUsage } from '@/lib/org-types';
+import { fetchOrgInfo, fetchOrgUsage } from '@/lib/org-server';
 
 export const dynamic = 'force-dynamic';
 
