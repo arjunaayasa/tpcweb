@@ -32,6 +32,8 @@ type PlanMeta = {
     cta: string;
     glow: string;
     popular?: boolean;
+    /** Dark card variant (white text on dark bg). */
+    dark?: boolean;
     /** MNC/Group is enterprise-only — no public price, contact sales. */
     contactOnly?: boolean;
 };
@@ -82,9 +84,23 @@ const planMeta: Record<string, PlanMeta> = {
     UMKM: {
         label: 'UMKM',
         description: 'Untuk pelaku usaha & konsultan',
-        tagline: 'Paling populer',
+        tagline: 'Untuk usaha',
         features: ['Model: Owlie Lite, Chat & Pro', 'Kuota standar untuk kebutuhan harian', 'Koleksi dokumen pajak domestik', 'Riwayat percakapan tersimpan'],
         icon: 'M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z',
+        accent: 'text-text-dark',
+        bg: 'bg-white',
+        border: 'border-slate-200',
+        badge: 'bg-primary/10 text-primary',
+        iconWrap: 'bg-primary/10 text-primary',
+        cta: 'bg-primary text-white hover:bg-secondary',
+        glow: 'hover:shadow-slate-200/60',
+    },
+    ENTERPRISE: {
+        label: 'Enterprise',
+        description: 'Untuk perusahaan & tim besar',
+        tagline: 'Paling populer',
+        features: ['Model: Owlie Lite, Chat & Pro', 'Kuota ±3x lebih banyak dari UMKM', 'Koleksi dokumen pajak domestik', 'Dukungan prioritas'],
+        icon: 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z',
         accent: 'text-text-dark',
         bg: 'bg-white',
         border: 'border-primary',
@@ -94,33 +110,20 @@ const planMeta: Record<string, PlanMeta> = {
         glow: 'hover:shadow-primary/25',
         popular: true,
     },
-    ENTERPRISE: {
-        label: 'Enterprise',
-        description: 'Untuk perusahaan & tim besar',
-        tagline: 'Untuk tim',
-        features: ['Model: Owlie Lite, Chat & Pro', 'Kuota ±3x lebih banyak dari UMKM', 'Koleksi dokumen pajak domestik', 'Dukungan prioritas'],
-        icon: 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z',
-        accent: 'text-text-dark',
-        bg: 'bg-white',
-        border: 'border-slate-200',
-        badge: 'bg-primary/10 text-primary',
-        iconWrap: 'bg-primary/10 text-primary',
-        cta: 'bg-primary text-white hover:bg-secondary',
-        glow: 'hover:shadow-slate-200/60',
-    },
     UNLIMITED: {
-        label: 'Corporate Unlimited',
+        label: 'Unlimited',
         description: 'Untuk korporasi kebutuhan tinggi',
         tagline: 'Kuota terbesar',
-        features: ['Semua model termasuk Owlie Max', 'Kuota ±10x lebih banyak dari UMKM', 'Pajak domestik & internasional', 'Dukungan prioritas'],
+        features: ['Semua model termasuk Owlie Max', 'Unlimited usage', 'Pajak domestik & internasional', 'Dukungan prioritas'],
         icon: 'M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0',
-        accent: 'text-text-dark',
-        bg: 'bg-white',
-        border: 'border-slate-200',
-        badge: 'bg-primary/10 text-primary',
-        iconWrap: 'bg-primary/10 text-primary',
-        cta: 'bg-primary text-white hover:bg-secondary',
-        glow: 'hover:shadow-slate-200/60',
+        accent: 'text-white',
+        bg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
+        border: 'border-slate-700',
+        badge: 'bg-white/10 text-white',
+        iconWrap: 'bg-white/10 text-white',
+        cta: 'bg-white text-slate-900 hover:bg-slate-100',
+        glow: 'hover:shadow-slate-800/30',
+        dark: true,
     },
     MNC: {
         label: 'MNC / Group',
@@ -214,6 +217,7 @@ export default function Pricing({ compact = false }: PricingProps) {
         const planPrice = getPrice(plan);
         const isFree = plan === 'FREE_LOGIN';
         const isStudent = plan === 'STUDENT';
+        const isDark = !!meta.dark;
 
         let ctaHref: string;
         let ctaLabel: string;
@@ -249,12 +253,12 @@ export default function Pricing({ compact = false }: PricingProps) {
                         <PlanIcon path={meta.icon} className={compact ? 'h-5 w-5' : 'h-6 w-6'} />
                     </span>
                     <div>
-                        <h3 className={`font-bold leading-tight text-text-dark ${compact ? 'text-base' : 'text-lg'}`}>{meta.label}</h3>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dark/40">{meta.tagline}</p>
+                        <h3 className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-text-dark'} ${compact ? 'text-base' : 'text-lg'}`}>{meta.label}</h3>
+                        <p className={`text-[11px] font-semibold uppercase tracking-wide ${isDark ? 'text-white/50' : 'text-text-dark/40'}`}>{meta.tagline}</p>
                     </div>
                 </div>
 
-                {!compact && <p className="mb-5 text-sm text-text-dark/60">{meta.description}</p>}
+                {!compact && <p className={`mb-5 text-sm ${isDark ? 'text-white/60' : 'text-text-dark/60'}`}>{meta.description}</p>}
 
                 <div className={compact ? 'mb-4 min-h-[48px]' : 'mb-6 min-h-[64px]'}>
                     {isFree ? (
@@ -264,18 +268,18 @@ export default function Pricing({ compact = false }: PricingProps) {
                             <div className="flex items-end gap-1">
                                 <span className={`font-bold leading-none ${meta.accent} ${compact ? 'text-2xl' : 'text-3xl'}`}>{formatCurrency(planPrice)}</span>
                             </div>
-                            <p className="text-xs mt-1.5 text-text-dark/50">per {interval === 'MONTHLY' ? 'bulan' : 'tahun'}</p>
+                            <p className={`text-xs mt-1.5 ${isDark ? 'text-white/50' : 'text-text-dark/50'}`}>per {interval === 'MONTHLY' ? 'bulan' : 'tahun'}</p>
                         </>
                     ) : (
                         <div className={`font-bold ${meta.accent} ${compact ? 'text-lg' : 'text-xl'}`}>Hubungi Kami</div>
                     )}
                 </div>
 
-                <ul className={`flex-1 text-text-dark/70 ${compact ? 'space-y-1.5 text-[13px] mb-5' : 'space-y-3 text-sm mb-7'}`}>
+                <ul className={`flex-1 ${isDark ? 'text-white/80' : 'text-text-dark/70'} ${compact ? 'space-y-1.5 text-[13px] mb-5' : 'space-y-3 text-sm mb-7'}`}>
                     {meta.features.map((feat) => (
                         <li key={feat} className="flex items-start gap-2.5">
-                            <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-secondary/10">
-                                <CheckIcon className="h-3 w-3 text-secondary" />
+                            <span className={`mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${isDark ? 'bg-white/15' : 'bg-secondary/10'}`}>
+                                <CheckIcon className={`h-3 w-3 ${isDark ? 'text-white' : 'text-secondary'}`} />
                             </span>
                             {feat}
                         </li>
