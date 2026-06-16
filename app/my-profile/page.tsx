@@ -7,6 +7,7 @@ import { getSiteSettings } from '@/lib/site-settings';
 import { getPlanCycle, getBillingWindow, addMonths, formatDate } from '@/lib/billing';
 import ProfileCard from './components/profile-card';
 import QuickAccess from './components/quick-access';
+import OrgPortalCard from './components/org-portal-card';
 import UsageStats from './components/usage-stats';
 import UpgradeBanner from './components/upgrade-banner';
 import InvoiceHistory from './components/invoice-history';
@@ -91,6 +92,11 @@ export default async function MyProfilePage() {
           {/* Left Column (Sidebar) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <ProfileCard user={user} planLabel={planLabel} />
+            <OrgPortalCard
+              orgRole={user.orgRole}
+              plan={userPlan}
+              organizationId={user.organizationId}
+            />
             <QuickAccess />
             <HelpSupport />
           </div>

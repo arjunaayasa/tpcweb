@@ -48,11 +48,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Silakan login terlebih dahulu.' }, { status: 401 });
     }
     const profile = (await profileRes.json()) as {
-      user?: { id?: string; email?: string };
+      user?: { id?: string; email?: string; plan?: string | null };
     };
     const user = profile.user;
     if (!user?.id || !user?.email) {
       return NextResponse.json({ error: 'Profil pengguna tidak valid.' }, { status: 400 });
+    }
+
+    // Only MNC/Group accounts may provision an organization. This guards both the post-payment
+    // checkout flow (plan is MNC by the time provision runs) and the no-payment setup path.
+    if (user.plan !== 'MNC') {
+      return NextResponse.json(
+        { error: 'Portal organisasi hanya tersedia untuk paket MNC / Group.' },
+        { status: 403 },
+      );
     }
 
     const headers: Record<string, string> = {
