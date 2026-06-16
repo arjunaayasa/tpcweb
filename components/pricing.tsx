@@ -289,35 +289,66 @@ export default function Pricing({ compact = false }: PricingProps) {
         );
     };
 
-    // Wide, full-width MNC / Group card.
+    // Slim mini-card for the entry-level plans (Free, Student) in the hero.
+    const renderMiniCard = (plan: string) => {
+        const meta = planMeta[plan];
+        const isFree = plan === 'FREE_LOGIN';
+        const planPrice = getPrice(plan);
+
+        let ctaHref: string;
+        let ctaLabel: string;
+        let priceLabel: string;
+        if (isFree) {
+            ctaHref = '/register';
+            ctaLabel = 'Mulai Gratis';
+            priceLabel = 'Gratis';
+        } else {
+            ctaHref = studentEligible ? `/payment?plan=STUDENT&interval=${interval}` : '/kyc';
+            ctaLabel = studentEligible ? 'Berlangganan' : 'Verifikasi KYC';
+            priceLabel = planPrice !== null ? formatCurrency(planPrice) : 'Hubungi Kami';
+        }
+
+        return (
+            <article className="flex flex-col rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+                <div className="mb-2 flex items-center gap-2.5">
+                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${meta.iconWrap}`}>
+                        <PlanIcon path={meta.icon} className="h-[18px] w-[18px]" />
+                    </span>
+                    <strong className="text-base font-bold text-text-dark">{meta.label}</strong>
+                </div>
+                <span className="block min-h-[40px] text-[13px] leading-snug text-text-dark/55">{meta.description}</span>
+                <div className={`mt-3 text-2xl font-extrabold tracking-tight ${meta.accent}`}>{priceLabel}</div>
+                <Link href={ctaHref} className={`mt-4 block w-full rounded-xl py-2.5 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}>
+                    {ctaLabel}
+                </Link>
+            </article>
+        );
+    };
+
+    // Wide, full-width MNC / Group band (3 columns: pitch · features · CTA).
     const renderMncCard = () => {
         const meta = planMeta.MNC;
         return (
             <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 shadow-lg md:p-10">
-                <div className="grid gap-8 md:grid-cols-2 md:items-center">
+                <div className="grid gap-8 lg:grid-cols-[0.9fr_1.3fr_0.7fr] lg:items-center lg:gap-10">
+                    {/* Pitch */}
                     <div>
                         <div className="mb-4 flex items-center gap-3">
                             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
                                 <PlanIcon path={meta.icon} className="h-6 w-6" />
                             </span>
                             <div>
-                                <h3 className="text-xl font-bold text-white">{meta.label}</h3>
+                                <h3 className="text-2xl font-bold text-white">{meta.label}</h3>
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{meta.tagline}</p>
                             </div>
                         </div>
-                        <p className="mb-6 max-w-md text-sm text-white/60">{meta.description}</p>
-                        <div className="mb-6">
-                            <div className="text-3xl font-bold text-white">Custom</div>
-                            <p className="mt-1 text-xs text-white/50">Harga sesuai kebutuhan perusahaan</p>
-                        </div>
-                        <Link
-                            href={MNC_CONTACT_HREF}
-                            className="inline-flex items-center justify-center rounded-xl bg-white px-8 py-3 text-sm font-bold text-slate-900 shadow-sm transition-all hover:bg-slate-100"
-                        >
-                            Hubungi Kami
-                        </Link>
+                        <p className="mb-5 max-w-sm text-sm leading-relaxed text-white/60">{meta.description}</p>
+                        <div className="text-3xl font-extrabold tracking-tight text-white">Custom</div>
+                        <p className="mt-1 text-xs text-white/50">Harga sesuai kebutuhan perusahaan</p>
                     </div>
-                    <ul className="grid gap-3 text-sm text-white/80 sm:grid-cols-2 md:gap-4">
+
+                    {/* Features (2 columns) */}
+                    <ul className="grid gap-3 text-sm text-white/80 sm:grid-cols-2 lg:gap-x-8 lg:gap-y-4">
                         {meta.features.map((feat) => (
                             <li key={feat} className="flex items-start gap-2.5">
                                 <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-white/15">
@@ -327,6 +358,16 @@ export default function Pricing({ compact = false }: PricingProps) {
                             </li>
                         ))}
                     </ul>
+
+                    {/* CTA */}
+                    <div className="lg:text-right">
+                        <Link
+                            href={MNC_CONTACT_HREF}
+                            className="inline-flex w-full items-center justify-center rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-slate-900 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-100"
+                        >
+                            Hubungi Kami
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
@@ -339,47 +380,55 @@ export default function Pricing({ compact = false }: PricingProps) {
             <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-secondary/5 blur-3xl pointer-events-none" />
 
             <div className="relative z-10 container mx-auto px-6">
-                {/* Header */}
-                <div className="text-center max-w-2xl mx-auto mb-14">
-                    <p className="text-xs uppercase tracking-[0.4em] text-secondary font-semibold mb-3">Pricing</p>
-                    <h2 className="text-4xl md:text-5xl font-bold font-playfair text-text-dark mb-4">
-                        Pilih Paket Terbaik
-                    </h2>
-                    <p className="text-lg text-text-dark/60">
-                        Mulai gratis, upgrade kapan saja. Harga transparan tanpa biaya tersembunyi.
-                    </p>
-                </div>
+                {/* Hero: heading + entry-level mini cards */}
+                <div className="mb-12 grid items-end gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div>
+                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.4em] text-secondary">Pricing</p>
+                        <h2 className="font-playfair text-4xl font-bold leading-[1.05] tracking-tight text-text-dark md:text-5xl">
+                            Pilih paket sesuai skala pekerjaan pajakmu.
+                        </h2>
+                        <p className="mt-4 max-w-xl text-lg leading-relaxed text-text-dark/60">
+                            Free dan Student sebagai akses awal. Fokus utama pada paket berbayar: UMKM, Enterprise,
+                            Corporate Unlimited, dan MNC / Group.
+                        </p>
+                        {/* Interval Toggle */}
+                        <div className="mt-6 flex">
+                            <div className="relative flex rounded-full bg-slate-100 p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setInterval('MONTHLY')}
+                                    className={`relative z-10 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${interval === 'MONTHLY'
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                        : 'text-text-dark/60 hover:text-text-dark'
+                                        }`}
+                                >
+                                    Bulanan
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setInterval('YEARLY')}
+                                    className={`relative z-10 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${interval === 'YEARLY'
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                        : 'text-text-dark/60 hover:text-text-dark'
+                                        }`}
+                                >
+                                    Tahunan
+                                    <span className="ml-2 rounded-full bg-accent-warm/20 px-2 py-0.5 text-[10px] font-bold text-accent-warm">
+                                        Hemat
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* Interval Toggle */}
-                <div className="flex items-center justify-center gap-1 mb-12">
-                    <div className="relative flex rounded-full bg-slate-100 p-1">
-                        <button
-                            type="button"
-                            onClick={() => setInterval('MONTHLY')}
-                            className={`relative z-10 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${interval === 'MONTHLY'
-                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                : 'text-text-dark/60 hover:text-text-dark'
-                                }`}
-                        >
-                            Bulanan
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setInterval('YEARLY')}
-                            className={`relative z-10 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${interval === 'YEARLY'
-                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                : 'text-text-dark/60 hover:text-text-dark'
-                                }`}
-                        >
-                            Tahunan
-                            <span className="ml-2 rounded-full bg-accent-warm/20 px-2 py-0.5 text-[10px] font-bold text-accent-warm">
-                                Hemat
-                            </span>
-                        </button>
+                    {/* Entry-level mini cards */}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {renderMiniCard('FREE_LOGIN')}
+                        {renderMiniCard('STUDENT')}
                     </div>
                 </div>
 
-                {/* Plan Cards */}
+                {/* Paid plans */}
                 {isLoading ? (
                     <div className="text-center py-16">
                         <div className="inline-flex items-center gap-3 text-text-dark/50">
@@ -391,21 +440,15 @@ export default function Pricing({ compact = false }: PricingProps) {
                         </div>
                     </div>
                 ) : (
-                    <div className="mx-auto max-w-6xl space-y-6">
-                        {/* Top row: Free + Student side by side */}
-                        <div className="mx-auto grid max-w-3xl items-stretch gap-6 sm:grid-cols-2">
-                            {renderCard('FREE_LOGIN', true)}
-                            {renderCard('STUDENT', true)}
-                        </div>
-
-                        {/* Main row: the three primary plans */}
-                        <div className="grid items-stretch gap-6 pt-2 lg:grid-cols-3">
+                    <div className="space-y-6">
+                        {/* Three primary plans */}
+                        <div className="grid items-stretch gap-6 pt-3 lg:grid-cols-3">
                             {renderCard('UMKM')}
                             {renderCard('ENTERPRISE')}
                             {renderCard('UNLIMITED')}
                         </div>
 
-                        {/* MNC / Group: own wide card */}
+                        {/* MNC / Group band */}
                         {renderMncCard()}
                     </div>
                 )}
