@@ -28,12 +28,6 @@ const planLabels: Record<string, string> = {
     MAX: 'Max',
 };
 
-const addonLabels: Record<string, string> = {
-    STARTER: 'AI Starter',
-    PRO: 'AI Pro',
-    UNLIMITED: 'AI Unlimited',
-};
-
 const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
@@ -72,24 +66,20 @@ const defaultInvoiceSettings: InvoiceSettings = {
 export default function PaymentClient() {
     const params = useSearchParams();
     const router = useRouter();
-    const purchaseType = (params.get('type') ?? 'plan') as 'plan' | 'ai-addon';
     const plan = params.get('plan') ?? '';
-    const addon = params.get('addon') ?? '';
     const interval = (params.get('interval') ?? 'MONTHLY') as 'MONTHLY' | 'YEARLY';
-    const isAddonPurchase = purchaseType === 'ai-addon' && !plan;
-    const hasPlan = !!plan;
-    const hasAddon = !!addon;
-    const isCombined = hasPlan && hasAddon;
 
     const [status, setStatus] = useState<Status>('idle');
     const [message, setMessage] = useState('');
     const [price, setPrice] = useState<number | null>(null);
-    const [planPrice, setPlanPrice] = useState<number | null>(null);
-    const [addonPrice, setAddonPrice] = useState<number | null>(null);
     const [invoiceId, setInvoiceId] = useState<string | null>(null);
     const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>(defaultInvoiceSettings);
     const [midtransClientKey, setMidtransClientKey] = useState('');
     const [midtransSnapUrl, setMidtransSnapUrl] = useState('https://app.sandbox.midtrans.com/snap/snap.js');
+    // Student KYC gate: 'checking' | 'eligible' | 'blocked' | 'n/a'
+    const [studentGate, setStudentGate] = useState<'checking' | 'eligible' | 'blocked' | 'n/a'>(
+        plan === 'STUDENT' ? 'checking' : 'n/a',
+    );
     const snapLoaded = useRef(false);
     const statusRef = useRef<Status>('idle');
 
@@ -139,58 +129,21 @@ export default function PaymentClient() {
         })();
     }, []);
 
-    // Fetch price(s)
+    // Fetch price
     useEffect(() => {
-        if (!plan && !addon) return;
+        if (!plan) return;
         updateStatus('loading-price');
-
         const load = async () => {
             try {
+                const res = await fetch(`/api/public/plan-prices?plan=${plan}&interval=${interval}`);
                 let pPrice: number | null = null;
-                let aPrice: number | null = null;
-
-                // Fetch plan price if plan selected
-                if (hasPlan) {
-                    const res = await fetch(`/api/public/plan-prices?plan=${plan}&interval=${interval}`);
-                    if (res.ok) {
-                        const data = (await res.json()) as { prices: Array<{ amount: number }> };
-                        pPrice = data.prices?.[0]?.amount ?? null;
-                    }
+                if (res.ok) {
+                    const data = (await res.json()) as { prices: Array<{ amount: number }> };
+                    pPrice = data.prices?.[0]?.amount ?? null;
                 }
 
-                // Fetch addon price if addon selected
-                if (hasAddon) {
-                    const res = await fetch(`/api/public/ai-addon-prices?addon=${addon}&interval=${interval}`);
-                    if (res.ok) {
-                        const data = (await res.json()) as { prices: Array<{ amount: number }> };
-                        aPrice = data.prices?.[0]?.amount ?? null;
-                    }
-                }
-
-                setPlanPrice(pPrice);
-                setAddonPrice(aPrice);
-
-                // Calculate total
-                const total = (pPrice ?? 0) + (aPrice ?? 0);
-                if ((hasPlan && pPrice === null) || (hasAddon && aPrice === null)) {
-                    // Missing a required price
-                    if (hasPlan && pPrice !== null) {
-                        // Plan price found, addon price not — still proceed with plan only
-                        setPrice(pPrice);
-                        updateStatus('ready');
-                    } else if (hasAddon && aPrice !== null && !hasPlan) {
-                        setPrice(aPrice);
-                        updateStatus('ready');
-                    } else if (hasPlan && pPrice !== null && hasAddon && aPrice === null) {
-                        // addon price not set yet, use plan price only
-                        setPrice(pPrice);
-                        updateStatus('ready');
-                    } else {
-                        updateStatus('error');
-                        setMessage('Harga belum tersedia.');
-                    }
-                } else if (total > 0) {
-                    setPrice(total);
+                if (pPrice !== null && pPrice > 0) {
+                    setPrice(pPrice);
                     updateStatus('ready');
                 } else {
                     updateStatus('error');
@@ -202,19 +155,46 @@ export default function PaymentClient() {
             }
         };
         void load();
-    }, [plan, addon, interval, hasPlan, hasAddon]);
+    }, [plan, interval]);
+
+    // Student KYC eligibility gate — STUDENT checkout requires an approved KYC window.
+    useEffect(() => {
+        if (plan !== 'STUDENT') {
+            setStudentGate('n/a');
+            return;
+        }
+        setStudentGate('checking');
+        void (async () => {
+            try {
+                const res = await fetch('/api/kyc/me', { credentials: 'include' });
+                if (res.status === 401) {
+                    // Not logged in — backend will require login on checkout anyway.
+                    setStudentGate('blocked');
+                    return;
+                }
+                if (!res.ok) {
+                    setStudentGate('blocked');
+                    return;
+                }
+                const data = (await res.json()) as { studentEligibleUntil?: string | null };
+                const until = data.studentEligibleUntil
+                    ? new Date(data.studentEligibleUntil).getTime()
+                    : 0;
+                setStudentGate(until > Date.now() ? 'eligible' : 'blocked');
+            } catch {
+                setStudentGate('blocked');
+            }
+        })();
+    }, [plan]);
 
     const handlePay = useCallback(async () => {
         if (statusRef.current !== 'ready' || !price) return;
+        if (plan === 'STUDENT' && studentGate !== 'eligible') return;
         updateStatus('creating');
         setMessage('');
 
         try {
-            const createBody = isCombined
-                ? { type: 'plan-addon', plan, addon, interval }
-                : isAddonPurchase
-                    ? { type: 'ai-addon', addon, interval }
-                    : { type: 'plan', plan, interval };
+            const createBody = { type: 'plan', plan, interval };
 
             const createRes = await fetch('/api/payment/create', {
                 method: 'POST',
@@ -249,11 +229,7 @@ export default function PaymentClient() {
                 onSuccess: async () => {
                     updateStatus('verifying');
                     try {
-                        const verifyBody = isCombined
-                            ? { order_id, plan, addon, type: 'plan-addon' }
-                            : isAddonPurchase
-                                ? { order_id, addon, type: 'ai-addon' }
-                                : { order_id, plan, type: 'plan' };
+                        const verifyBody = { order_id, plan, type: 'plan' };
 
                         const verifyRes = await fetch('/api/payment/verify', {
                             method: 'POST',
@@ -262,11 +238,7 @@ export default function PaymentClient() {
                             body: JSON.stringify(verifyBody),
                         });
                         const verifyData = (await verifyRes.json()) as { invoiceId?: string };
-                        const successLabel = isCombined
-                            ? `Paket ${planLabels[plan] ?? plan} + ${addonLabels[addon] ?? addon} berhasil diaktifkan!`
-                            : isAddonPurchase
-                                ? `Add-on ${addonLabels[addon] ?? addon} berhasil diaktifkan!`
-                                : `Paket Anda berhasil diupgrade ke ${planLabels[plan] ?? plan}!`;
+                        const successLabel = `Paket Anda berhasil diupgrade ke ${planLabels[plan] ?? plan}!`;
                         if (verifyRes.ok) {
                             updateStatus('success');
                             setMessage(successLabel);
@@ -306,13 +278,13 @@ export default function PaymentClient() {
             updateStatus('error');
             setMessage('Terjadi kesalahan. Silakan coba lagi.');
         }
-    }, [plan, addon, interval, price, router, isAddonPurchase, isCombined]);
+    }, [plan, interval, price, router, studentGate]);
 
-    if (!plan && !addon) {
+    if (!plan) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-text-dark/60 mb-4">Paket atau add-on tidak ditemukan.</p>
+                    <p className="text-text-dark/60 mb-4">Paket tidak ditemukan.</p>
                     <Link href="/pricing" className="text-primary font-semibold hover:underline">
                         ← Kembali ke Harga
                     </Link>
@@ -321,11 +293,7 @@ export default function PaymentClient() {
         );
     }
 
-    const displayLabel = isCombined
-        ? `${planLabels[plan] ?? plan} + ${addonLabels[addon] ?? addon}`
-        : isAddonPurchase
-            ? (addonLabels[addon] ?? addon)
-            : (planLabels[plan] ?? plan);
+    const displayLabel = planLabels[plan] ?? plan;
 
     const isProcessing = status === 'creating' || status === 'paying' || status === 'verifying';
     const today = new Date();
@@ -400,55 +368,23 @@ export default function PaymentClient() {
                                         </tr>
                                     </thead>
                                     <tbody className="border-t border-gray-100">
-                                        {hasPlan && (
-                                            <tr>
-                                                <td className="py-4">
-                                                    <p className="font-semibold text-gray-900">Paket {planLabels[plan] ?? plan}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Langganan {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
-                                                </td>
-                                                <td className="py-4 text-center text-gray-600">1</td>
-                                                <td className="py-4 text-right text-gray-600">
-                                                    {status === 'loading-price' ? (
-                                                        <span className="inline-block w-16 h-4 bg-gray-100 rounded animate-pulse" />
-                                                    ) : planPrice !== null ? formatCurrency(planPrice) : '-'}
-                                                </td>
-                                                <td className="py-4 text-right font-semibold text-gray-900">
-                                                    {status === 'loading-price' ? (
-                                                        <span className="inline-block w-20 h-4 bg-gray-100 rounded animate-pulse" />
-                                                    ) : planPrice !== null ? formatCurrency(planPrice) : '-'}
-                                                </td>
-                                            </tr>
-                                        )}
-                                        {hasAddon && hasPlan && addonPrice !== null && addonPrice > 0 && (
-                                            <tr>
-                                                <td className="py-4">
-                                                    <p className="font-semibold text-gray-900">AI Add-on {addonLabels[addon] ?? addon}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Add-on {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
-                                                </td>
-                                                <td className="py-4 text-center text-gray-600">1</td>
-                                                <td className="py-4 text-right text-gray-600">{formatCurrency(addonPrice)}</td>
-                                                <td className="py-4 text-right font-semibold text-gray-900">{formatCurrency(addonPrice)}</td>
-                                            </tr>
-                                        )}
-                                        {isAddonPurchase && !hasPlan && (
-                                            <tr>
-                                                <td className="py-4">
-                                                    <p className="font-semibold text-gray-900">AI Add-on {addonLabels[addon] ?? addon}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Add-on {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
-                                                </td>
-                                                <td className="py-4 text-center text-gray-600">1</td>
-                                                <td className="py-4 text-right text-gray-600">
-                                                    {status === 'loading-price' ? (
-                                                        <span className="inline-block w-16 h-4 bg-gray-100 rounded animate-pulse" />
-                                                    ) : price !== null ? formatCurrency(price) : '-'}
-                                                </td>
-                                                <td className="py-4 text-right font-semibold text-gray-900">
-                                                    {status === 'loading-price' ? (
-                                                        <span className="inline-block w-20 h-4 bg-gray-100 rounded animate-pulse" />
-                                                    ) : price !== null ? formatCurrency(price) : '-'}
-                                                </td>
-                                            </tr>
-                                        )}
+                                        <tr>
+                                            <td className="py-4">
+                                                <p className="font-semibold text-gray-900">Paket {planLabels[plan] ?? plan}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">Langganan {interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'}</p>
+                                            </td>
+                                            <td className="py-4 text-center text-gray-600">1</td>
+                                            <td className="py-4 text-right text-gray-600">
+                                                {status === 'loading-price' ? (
+                                                    <span className="inline-block w-16 h-4 bg-gray-100 rounded animate-pulse" />
+                                                ) : price !== null ? formatCurrency(price) : '-'}
+                                            </td>
+                                            <td className="py-4 text-right font-semibold text-gray-900">
+                                                {status === 'loading-price' ? (
+                                                    <span className="inline-block w-20 h-4 bg-gray-100 rounded animate-pulse" />
+                                                ) : price !== null ? formatCurrency(price) : '-'}
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
 
@@ -512,18 +448,10 @@ export default function PaymentClient() {
                             <div className="px-6 py-6">
                                 {/* Quick Summary */}
                                 <div className="rounded-2xl bg-slate-50 p-4 mb-5">
-                                    {hasPlan && (
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs text-gray-500">Paket</span>
-                                            <span className="text-sm font-bold text-gray-900">{planLabels[plan] ?? plan}</span>
-                                        </div>
-                                    )}
-                                    {hasAddon && (
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs text-gray-500">AI Add-on</span>
-                                            <span className="text-sm font-bold text-gray-900">{addonLabels[addon] ?? addon}</span>
-                                        </div>
-                                    )}
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs text-gray-500">Paket</span>
+                                        <span className="text-sm font-bold text-gray-900">{planLabels[plan] ?? plan}</span>
+                                    </div>
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs text-gray-500">Periode</span>
                                         <span className="text-sm font-semibold text-gray-700">
@@ -575,15 +503,41 @@ export default function PaymentClient() {
                                     </div>
                                 ) : null}
 
+                                {/* Student KYC gate notice */}
+                                {plan === 'STUDENT' && studentGate === 'blocked' ? (
+                                    <div className="rounded-xl px-4 py-3 mb-4 text-sm bg-amber-50 text-amber-800 border border-amber-200">
+                                        <p className="font-semibold mb-1">Verifikasi pelajar diperlukan</p>
+                                        <p className="text-xs leading-relaxed">
+                                            Paket Student hanya tersedia setelah status pelajar Anda terverifikasi (KYC).
+                                            Silakan lakukan verifikasi terlebih dahulu.
+                                        </p>
+                                        <Link
+                                            href="/kyc"
+                                            className="mt-3 inline-block rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-500"
+                                        >
+                                            Verifikasi KYC Sekarang
+                                        </Link>
+                                    </div>
+                                ) : null}
+
                                 {/* Pay button */}
                                 {status !== 'success' ? (
+                                    plan === 'STUDENT' && studentGate === 'blocked' ? null : (
                                     <button
                                         type="button"
                                         onClick={() => void handlePay()}
-                                        disabled={status !== 'ready' && !['error', 'pending'].includes(status)}
+                                        disabled={(status !== 'ready' && !['error', 'pending'].includes(status)) || (plan === 'STUDENT' && studentGate !== 'eligible')}
                                         className="w-full rounded-xl bg-primary py-3.5 text-center text-sm font-bold text-white transition-all hover:bg-secondary hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:hover:shadow-none"
                                     >
-                                        {isProcessing ? (
+                                        {plan === 'STUDENT' && studentGate === 'checking' ? (
+                                            <span className="inline-flex items-center gap-2">
+                                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                </svg>
+                                                Memeriksa eligibilitas...
+                                            </span>
+                                        ) : isProcessing ? (
                                             <span className="inline-flex items-center gap-2">
                                                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -597,6 +551,7 @@ export default function PaymentClient() {
                                             'Bayar Sekarang'
                                         )}
                                     </button>
+                                    )
                                 ) : (
                                     <div className="text-center">
                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 mb-3">

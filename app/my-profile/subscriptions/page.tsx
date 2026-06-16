@@ -41,25 +41,6 @@ export default async function ManageSubscriptionsPage() {
   const planLabel = planLabels[userPlan] ?? (userPlan);
   const isFree = userPlan === 'FREE' || userPlan === 'FREE_LOGIN';
 
-  // Addon data
-  const effectiveAddon = (user as Record<string, unknown>).effectiveAddon as string ?? 'NONE';
-  const aiAddon = (user as Record<string, unknown>).aiAddon as string ?? 'NONE';
-  const aiAddonExpiry = (user as Record<string, unknown>).aiAddonExpiry as string | null ?? null;
-  const hasAddon = effectiveAddon !== 'NONE';
-  const isAddonExpired = effectiveAddon === 'NONE' && aiAddon !== 'NONE';
-
-  const addonLabels: Record<string, string> = {
-    NONE: 'Tidak Ada',
-    STARTER: 'AI Starter',
-    PRO: 'AI Pro',
-    UNLIMITED: 'AI Unlimited',
-  };
-
-  const formatExpiryDate = (expiry: string | null): string => {
-    if (!expiry) return 'Tidak terbatas';
-    return new Date(expiry).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-  };
-
   // Billing Logic
   const cycle = getPlanCycle(plan ?? null);
   const now = new Date();
@@ -96,7 +77,7 @@ export default async function ManageSubscriptionsPage() {
 
           {/* Left Column (Sidebar) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <ProfileCard user={user} planLabel={planLabel} effectiveAddon={effectiveAddon} />
+            <ProfileCard user={user} planLabel={planLabel} />
             <QuickAccess />
             <HelpSupport />
           </div>
@@ -181,52 +162,6 @@ export default async function ManageSubscriptionsPage() {
 
             {/* Payment Method & Billing Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {/* AI Add-on Card */}
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden md:col-span-2">
-                <div className={`p-6 sm:p-8 ${hasAddon ? 'bg-gradient-to-r from-teal-900 to-teal-800' : 'bg-gradient-to-r from-gray-700 to-gray-600'} text-white`}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-teal-200 text-sm font-medium mb-1">AI Add-on</p>
-                      <h2 className="text-3xl font-bold tracking-tight">
-                        {addonLabels[effectiveAddon] || effectiveAddon}
-                      </h2>
-                    </div>
-                    {isAddonExpired ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-red-500/20 text-red-300">
-                        Kedaluwarsa
-                      </span>
-                    ) : hasAddon ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-green-500/20 text-green-300">
-                        Aktif
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-gray-500/50 text-gray-300">
-                        Nonaktif
-                      </span>
-                    )}
-                  </div>
-                  {hasAddon && (
-                    <div className="mt-6 flex flex-wrap gap-6 text-sm">
-                      <div>
-                        <p className="text-teal-300 text-xs uppercase tracking-wider mb-1">Berlaku Hingga</p>
-                        <p className="font-semibold text-white">{formatExpiryDate(aiAddonExpiry)}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6 sm:p-8 bg-white">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Link
-                      href="/pricing"
-                      className="flex-1 flex items-center justify-center gap-2 bg-teal-800 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
-                    >
-                      <span className="material-icons-round text-sm">smart_toy</span>
-                      {!hasAddon ? 'Beli AI Add-on' : 'Upgrade AI Add-on'}
-                    </Link>
-                  </div>
-                </div>
-              </div>
 
               <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center gap-3 mb-4 text-gray-900">

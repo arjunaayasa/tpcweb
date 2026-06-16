@@ -91,9 +91,9 @@ export type AuthUser = {
   role: 'ADMIN' | 'USER';
   plan?: string | null;
   avatarUrl?: string | null;
-  aiAddon?: string | null;
-  aiAddonExpiry?: string | null;
-  effectiveAddon?: string | null;
+  studentEligibleUntil?: string | null;
+  organizationId?: string | null;
+  orgRole?: 'ADMIN' | 'MEMBER' | null;
 };
 
 type PlanInfo = {

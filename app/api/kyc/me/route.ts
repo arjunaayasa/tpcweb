@@ -3,27 +3,29 @@ import { getBackendUrl } from '@/lib/sso';
 
 export const runtime = 'nodejs';
 
-export async function POST(request: Request) {
+/**
+ * Proxies the authenticated user's latest KYC submission + eligibility window
+ * from the backend (`GET /api/kyc/me`). Cookie-based auth is forwarded.
+ */
+export async function GET(request: Request) {
   try {
-    const body = await request.text();
     const base = await getBackendUrl();
-    const upstream = await fetch(`${base}/api/billing/change-ai-addon`, {
-      method: 'POST',
+    const upstream = await fetch(`${base}/api/kyc/me`, {
       headers: {
-        'Content-Type': 'application/json',
-        accept: 'application/json',
         cookie: request.headers.get('cookie') ?? '',
-        ...(process.env.BILLING_API_KEY
-          ? { 'x-api-key': process.env.BILLING_API_KEY }
-          : {}),
+        accept: 'application/json',
       },
-      body,
+      cache: 'no-store',
     });
 
     const payload = await upstream.text();
     const response = new NextResponse(payload, { status: upstream.status });
+
     const contentType = upstream.headers.get('content-type');
-    if (contentType) response.headers.set('content-type', contentType);
+    if (contentType) {
+      response.headers.set('content-type', contentType);
+    }
+
     return response;
   } catch {
     return NextResponse.json({ error: 'Auth service unavailable.' }, { status: 502 });

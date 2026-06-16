@@ -11,7 +11,6 @@ import UsageStats from './components/usage-stats';
 import UpgradeBanner from './components/upgrade-banner';
 import InvoiceHistory from './components/invoice-history';
 import SubscriptionStatus from './components/subscription-status';
-import AiAddonStatus from './components/ai-addon-status';
 import HelpSupport from './components/help-support';
 
 export default async function MyProfilePage() {
@@ -24,7 +23,6 @@ export default async function MyProfilePage() {
 
   const settings = await getSiteSettings(['footer']);
   const { user, plan, usage } = profile;
-  console.log('DEBUG_PLAN_LIMITS:', JSON.stringify(plan, null, 2));
 
   // Plan Label Logic
   const planLabelMap: Record<string, string> = {
@@ -40,11 +38,6 @@ export default async function MyProfilePage() {
   const userPlan = user.plan ?? 'FREE';
   const planLabel = planLabelMap[userPlan] ?? (userPlan);
   const isFree = userPlan === 'FREE' || userPlan === 'FREE_LOGIN';
-
-  // Addon data
-  const effectiveAddon = (user as Record<string, unknown>).effectiveAddon as string ?? 'NONE';
-  const aiAddon = (user as Record<string, unknown>).aiAddon as string ?? 'NONE';
-  const aiAddonExpiry = (user as Record<string, unknown>).aiAddonExpiry as string | null ?? null;
 
   // Billing Logic
   const cycle = getPlanCycle(plan ?? null);
@@ -97,7 +90,7 @@ export default async function MyProfilePage() {
 
           {/* Left Column (Sidebar) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <ProfileCard user={user} planLabel={planLabel} effectiveAddon={effectiveAddon} />
+            <ProfileCard user={user} planLabel={planLabel} />
             <QuickAccess />
             <HelpSupport />
           </div>
@@ -109,20 +102,13 @@ export default async function MyProfilePage() {
               limits={limits}
               allowedModels={plan?.allowedModels ?? []}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SubscriptionStatus
-                planLabel={planLabel}
-                status={isFree ? 'Gratis' : 'Aktif'}
-                nextBillingDate={isFree ? '-' : formatDate(next)}
-                isFree={isFree}
-              />
-              <AiAddonStatus
-                effectiveAddon={effectiveAddon}
-                aiAddon={aiAddon}
-                aiAddonExpiry={aiAddonExpiry}
-              />
-            </div>
-            {effectiveAddon === 'NONE' && <UpgradeBanner />}
+            <SubscriptionStatus
+              planLabel={planLabel}
+              status={isFree ? 'Gratis' : 'Aktif'}
+              nextBillingDate={isFree ? '-' : formatDate(next)}
+              isFree={isFree}
+            />
+            {isFree && <UpgradeBanner />}
             <InvoiceHistory invoices={invoices} />
           </div>
 

@@ -60,38 +60,29 @@ export async function POST(request: Request) {
 
         // 2. Parse request body
         const body = (await request.json()) as {
-            type?: 'plan' | 'ai-addon' | 'plan-addon';
+            type?: 'plan';
             plan?: string;
-            addon?: string;
             interval: string;
         };
-        const { type = 'plan', plan, addon, interval } = body;
+        const { plan, interval } = body;
 
         if (!interval) {
             return NextResponse.json({ error: 'Interval wajib diisi.' }, { status: 400 });
         }
 
-        const isPlanPurchase = type === 'plan' || type === 'plan-addon';
-        const isAddonPurchase = type === 'ai-addon' || type === 'plan-addon';
-        const isCombined = type === 'plan-addon';
-
-        if (isPlanPurchase && !plan) {
+        if (!plan) {
             return NextResponse.json({ error: 'Plan wajib diisi.' }, { status: 400 });
         }
-        if (isAddonPurchase && !addon) {
-            return NextResponse.json({ error: 'Addon wajib diisi.' }, { status: 400 });
-        }
 
-        if (isPlanPurchase && user.plan === plan && !isCombined) {
+        if (user.plan === plan) {
             return NextResponse.json({ error: 'Anda sudah menggunakan paket ini.' }, { status: 400 });
         }
 
-        // 3. Get price from appropriate prices API
+        // 3. Get plan price from prices API
         let planPriceAmount = 0;
-        let addonPriceAmount = 0;
         let currency = 'IDR';
 
-        if (isPlanPurchase && plan) {
+        {
             const priceRes = await fetch(
                 `${base}/api/public/plan-prices?plan=${plan}&interval=${interval}`,
                 { cache: 'no-store' },
@@ -112,29 +103,7 @@ export async function POST(request: Request) {
             currency = matched.currency;
         }
 
-        if (isAddonPurchase && addon) {
-            const priceRes = await fetch(
-                `${base}/api/public/ai-addon-prices?addon=${addon}&interval=${interval}`,
-                { cache: 'no-store' },
-            );
-            if (!priceRes.ok) {
-                return NextResponse.json({ error: 'Gagal memuat harga add-on.' }, { status: 502 });
-            }
-            const priceData = (await priceRes.json()) as {
-                prices: Array<{ addon: string; interval: string; amount: number; currency: string }>;
-            };
-            const matched = priceData.prices?.find(
-                (p) => p.addon === addon && p.interval === interval,
-            );
-            if (matched && matched.amount > 0) {
-                addonPriceAmount = matched.amount;
-            } else if (!isPlanPurchase) {
-                // addon-only purchase but no price found
-                return NextResponse.json({ error: 'Harga add-on belum tersedia.' }, { status: 404 });
-            }
-        }
-
-        const grossAmount = planPriceAmount + addonPriceAmount;
+        const grossAmount = planPriceAmount;
         if (grossAmount <= 0) {
             return NextResponse.json({ error: 'Harga belum tersedia.' }, { status: 404 });
         }
@@ -173,26 +142,16 @@ export async function POST(request: Request) {
         const finalGrossAmount = grossAmount + taxAmount + stampDuty;
 
         // 4. Build Midtrans Snap request
-        const prefix = isCombined ? `TPC-${plan}-AI-${addon}` : isPlanPurchase ? `TPC-${plan}` : `TPC-AI-${addon}`;
-        const orderId = `${prefix}-${user.id.slice(0, 8)}-${Date.now()}`;
+        const orderId = `TPC-${plan}-${user.id.slice(0, 8)}-${Date.now()}`;
 
         const itemDetails: Array<{ id: string; price: number; quantity: number; name: string }> = [];
 
-        if (isPlanPurchase && planPriceAmount > 0) {
+        if (planPriceAmount > 0) {
             itemDetails.push({
                 id: `${plan}-${interval}`,
                 price: planPriceAmount,
                 quantity: 1,
                 name: `Paket ${plan} (${interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'})`,
-            });
-        }
-
-        if (isAddonPurchase && addonPriceAmount > 0) {
-            itemDetails.push({
-                id: `addon-${addon}-${interval}`,
-                price: addonPriceAmount,
-                quantity: 1,
-                name: `AI Add-on ${addon} (${interval === 'MONTHLY' ? 'Bulanan' : 'Tahunan'})`,
             });
         }
 
@@ -214,9 +173,6 @@ export async function POST(request: Request) {
             });
         }
 
-        // custom_field2: encode both plan and addon info
-        const field2 = isCombined ? `${plan}+addon:${addon}` : isPlanPurchase ? (plan ?? '') : `addon:${addon}`;
-
         const snapPayload = {
             transaction_details: {
                 order_id: orderId,
@@ -229,7 +185,7 @@ export async function POST(request: Request) {
             },
             // Store metadata for webhook processing
             custom_field1: user.id,
-            custom_field2: field2,
+            custom_field2: plan,
             custom_field3: user.email,
         };
 

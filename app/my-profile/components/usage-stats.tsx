@@ -13,7 +13,7 @@ export default function UsageStats({ usage, limits, allowedModels }: UsageStatsP
     ];
 
     const isModelAllowed = (key: string) => {
-        if (!allowedModels || allowedModels.length === 0) return false; // No addon / free plan = no access
+        if (!allowedModels || allowedModels.length === 0) return false; // No allowed models for this plan
         return allowedModels.includes(key);
     };
 

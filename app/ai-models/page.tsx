@@ -63,7 +63,6 @@ const models = [
             'Ideal untuk konsultasi awal',
         ],
         bestFor: 'Pertanyaan pajak sederhana, ringkasan pasal, dan jawaban cepat sehari-hari.',
-        addon: 'AI Starter',
     },
     {
         id: 'owlie-chat',
@@ -85,7 +84,6 @@ const models = [
             'Dukungan multi-bahasa',
         ],
         bestFor: 'Diskusi mendalam tentang peraturan pajak, interpretasi pasal, dan analisis dokumen.',
-        addon: 'AI Starter',
     },
     {
         id: 'owlie-thinking',
@@ -107,7 +105,6 @@ const models = [
             'Rekomendasi strategis pajak',
         ],
         bestFor: 'Analisis kasus pajak kompleks, perencanaan pajak, dan perbandingan peraturan antar yurisdiksi.',
-        addon: 'AI Pro',
     },
     {
         id: 'owlie-max',
@@ -129,28 +126,8 @@ const models = [
             'Laporan komprehensif',
         ],
         bestFor: 'Analisis dokumen panjang, laporan pajak komprehensif, dan proyek riset perpajakan besar.',
-        addon: 'AI Unlimited',
     },
 ];
-
-const addonTiers = [
-    {
-        name: 'AI Starter',
-        models: ['Owlie Lite', 'Owlie Chat v1.5'],
-        badge: 'bg-emerald-100 text-emerald-700',
-    },
-    {
-        name: 'AI Pro',
-        models: ['Owlie Lite', 'Owlie Chat v1.5', 'Owlie Thinking v1.5'],
-        badge: 'bg-violet-100 text-violet-700',
-    },
-    {
-        name: 'AI Unlimited',
-        models: ['Owlie Lite', 'Owlie Chat v1.5', 'Owlie Thinking v1.5', 'Owlie Max v1.5'],
-        badge: 'bg-amber-100 text-amber-700',
-    },
-];
-
 
 
 export default async function AIModelsPage() {
@@ -243,15 +220,9 @@ export default async function AIModelsPage() {
                                         ))}
                                     </ul>
 
-                                    {/* Addon Badge */}
+                                    {/* Plan availability */}
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs text-text-dark/40">Tersedia di:</span>
-                                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${model.accentBadge}`}>
-                                            {model.addon}
-                                        </span>
-                                        {model.addon !== 'AI Unlimited' && (
-                                            <span className="text-[10px] text-text-dark/30">& tier di atasnya</span>
-                                        )}
+                                        <span className="text-xs text-text-dark/40">Akses sesuai paket langganan & kuota model harian/bulanan.</span>
                                     </div>
                                 </div>
 
@@ -270,37 +241,17 @@ export default async function AIModelsPage() {
                 </div>
             </section>
 
-            {/* Add-on Tiers Summary */}
+            {/* Plan access summary */}
             <section className="py-20 bg-gradient-to-b from-neutral-light to-white">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
-                        <p className="text-xs uppercase tracking-[0.4em] text-secondary font-semibold mb-3">AI Add-on</p>
+                        <p className="text-xs uppercase tracking-[0.4em] text-secondary font-semibold mb-3">Paket Langganan</p>
                         <h2 className="text-3xl md:text-4xl font-bold font-playfair text-text-dark mb-4">
-                            Akses Model via AI Add-on
+                            Akses Model Sesuai Paket
                         </h2>
                         <p className="text-text-dark/60 max-w-lg mx-auto">
-                            Model AI Owlie tersedia melalui AI Add-on yang dapat ditambahkan ke paket langganan Anda.
+                            Setiap paket langganan menentukan model yang tersedia beserta kuota penggunaan harian dan bulanan untuk tiap model.
                         </p>
-                    </div>
-
-                    <div className="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
-                        {addonTiers.map((tier) => (
-                            <div key={tier.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-                                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${tier.badge} mb-4`}>
-                                    {tier.name}
-                                </span>
-                                <ul className="space-y-2.5">
-                                    {tier.models.map((m) => (
-                                        <li key={m} className="flex items-center gap-2 text-sm text-text-dark/70">
-                                            <svg className="w-4 h-4 text-secondary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            {m}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
                     </div>
 
                     <div className="text-center mt-12">

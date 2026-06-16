@@ -46,24 +46,6 @@ const navItems = [
     ),
   },
   {
-    label: 'AI Add-on',
-    href: '/admin-tpc/ai-addon-models',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Harga AI Add-on',
-    href: '/admin-tpc/ai-addon-prices',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-      </svg>
-    ),
-  },
-  {
     label: 'Testimonial',
     href: '/admin-tpc/testimonials',
     icon: (

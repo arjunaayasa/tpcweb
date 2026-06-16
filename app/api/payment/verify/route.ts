@@ -43,22 +43,14 @@ export async function POST(request: Request) {
         const body = (await request.json()) as {
             order_id: string;
             plan?: string;
-            addon?: string;
-            type?: 'plan' | 'ai-addon' | 'plan-addon';
         };
 
-        const { order_id, plan, addon, type = plan ? 'plan' : 'ai-addon' } = body;
+        const { order_id, plan } = body;
         if (!order_id) {
             return NextResponse.json({ error: 'order_id wajib diisi.' }, { status: 400 });
         }
-        const needsPlan = type === 'plan' || type === 'plan-addon';
-        const needsAddon = type === 'ai-addon' || type === 'plan-addon';
-
-        if (needsPlan && !plan) {
+        if (!plan) {
             return NextResponse.json({ error: 'plan wajib diisi.' }, { status: 400 });
-        }
-        if (needsAddon && !addon) {
-            return NextResponse.json({ error: 'addon wajib diisi.' }, { status: 400 });
         }
 
         // 1. Verify transaction status with Midtrans
@@ -113,7 +105,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Profil pengguna tidak valid.' }, { status: 400 });
         }
 
-        // 3. Upgrade plan and/or activate addon via billing API
+        // 3. Upgrade plan via billing API
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             accept: 'application/json',
@@ -121,8 +113,7 @@ export async function POST(request: Request) {
         };
         if (BILLING_API_KEY) headers['x-api-key'] = BILLING_API_KEY;
 
-        // Activate plan if needed
-        if (needsPlan && plan) {
+        {
             const changePlanPayload = { plan, email: user.email, userId: user.id };
             const changeRes = await fetch(`${base}/api/billing/change-plan`, {
                 method: 'POST',
@@ -133,30 +124,6 @@ export async function POST(request: Request) {
                 const errText = await changeRes.text();
                 console.error('[Payment] Failed to change plan:', errText);
                 return NextResponse.json({ error: 'Gagal mengupgrade paket.' }, { status: 502 });
-            }
-        }
-
-        // Activate addon if needed
-        if (needsAddon && addon) {
-            const intervalMatch = order_id.match(/-(MONTHLY|YEARLY|ANNUAL)/i);
-            const parsedInterval = intervalMatch ? intervalMatch[1].toUpperCase() : 'MONTHLY';
-            const changeAddonPayload = {
-                addon,
-                email: user.email,
-                userId: user.id,
-                interval: parsedInterval === 'ANNUAL' ? 'YEARLY' : parsedInterval,
-            };
-
-            const changeRes = await fetch(`${base}/api/billing/change-ai-addon`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(changeAddonPayload),
-            });
-
-            if (!changeRes.ok) {
-                const errText = await changeRes.text();
-                console.error('[Payment] Failed to activate addon:', errText);
-                return NextResponse.json({ error: 'Gagal mengaktifkan add-on.' }, { status: 502 });
             }
         }
 
@@ -171,7 +138,7 @@ export async function POST(request: Request) {
                 orderId: order_id,
                 userId: user.id ?? '',
                 userEmail: user.email,
-                plan: type === 'plan-addon' ? `${plan}+AI-${addon}` : type === 'ai-addon' ? `AI-${addon}` : (plan ?? ''),
+                plan: plan ?? '',
                 amount,
                 interval,
                 paymentMethod: statusData.payment_type ?? 'Midtrans',
@@ -181,7 +148,7 @@ export async function POST(request: Request) {
             console.error('[Payment] Invoice creation failed:', invoiceErr);
         }
 
-        return NextResponse.json({ status: 'ok', plan: type === 'ai-addon' ? addon : plan, type, invoiceId });
+        return NextResponse.json({ status: 'ok', plan, type: 'plan', invoiceId });
     } catch (err) {
         console.error('[Payment] Verify error:', err);
         return NextResponse.json({ error: 'Terjadi kesalahan server.' }, { status: 500 });
