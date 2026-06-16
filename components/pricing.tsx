@@ -12,8 +12,6 @@ type PlanPrice = {
 
 type Interval = 'MONTHLY' | 'YEARLY';
 
-const planOrder = ['FREE_LOGIN', 'STUDENT', 'UMKM', 'ENTERPRISE', 'UNLIMITED', 'MNC'] as const;
-
 /** Sales contact for the enterprise (MNC/Group) plan. */
 const MNC_CONTACT_HREF =
     'mailto:sales@taxindo.ai?subject=' + encodeURIComponent('Permintaan Paket MNC / Group - TPC AI');
@@ -210,6 +208,130 @@ export default function Pricing({ compact = false }: PricingProps) {
         return match ? match.amount : null;
     };
 
+    // Standard vertical plan card (Free, Student, UMKM, Enterprise, Unlimited).
+    const renderCard = (plan: string) => {
+        const meta = planMeta[plan];
+        const planPrice = getPrice(plan);
+        const isFree = plan === 'FREE_LOGIN';
+        const isStudent = plan === 'STUDENT';
+
+        let ctaHref: string;
+        let ctaLabel: string;
+        if (isFree) {
+            ctaHref = '/register';
+            ctaLabel = 'Mulai Gratis';
+        } else if (isStudent) {
+            ctaHref = studentEligible ? `/payment?plan=STUDENT&interval=${interval}` : '/kyc';
+            ctaLabel = studentEligible ? 'Berlangganan' : 'Verifikasi KYC';
+        } else if (planPrice !== null) {
+            ctaHref = `/payment?plan=${plan}&interval=${interval}`;
+            ctaLabel = 'Berlangganan';
+        } else {
+            ctaHref = '/login';
+            ctaLabel = 'Hubungi Kami';
+        }
+
+        return (
+            <div
+                key={plan}
+                className={`group relative flex flex-col rounded-3xl border p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.glow} ${meta.bg} ${meta.border} ${meta.popular ? 'lg:scale-[1.03] shadow-lg ring-1 ring-primary/20' : ''}`}
+            >
+                {meta.popular ? (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <span className="rounded-full bg-primary px-4 py-1 text-xs font-bold text-white shadow-lg shadow-primary/30">
+                            Paling Populer
+                        </span>
+                    </div>
+                ) : null}
+
+                <div className="mb-5 flex items-center gap-3">
+                    <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${meta.iconWrap}`}>
+                        <PlanIcon path={meta.icon} className="h-6 w-6" />
+                    </span>
+                    <div>
+                        <h3 className="text-lg font-bold leading-tight text-text-dark">{meta.label}</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dark/40">{meta.tagline}</p>
+                    </div>
+                </div>
+
+                <p className="mb-5 text-sm text-text-dark/60">{meta.description}</p>
+
+                <div className="mb-6 min-h-[64px]">
+                    {isFree ? (
+                        <div className={`text-3xl font-bold ${meta.accent}`}>Gratis</div>
+                    ) : planPrice !== null ? (
+                        <>
+                            <div className="flex items-end gap-1">
+                                <span className={`text-3xl font-bold leading-none ${meta.accent}`}>{formatCurrency(planPrice)}</span>
+                            </div>
+                            <p className="text-xs mt-1.5 text-text-dark/50">per {interval === 'MONTHLY' ? 'bulan' : 'tahun'}</p>
+                        </>
+                    ) : (
+                        <div className={`text-xl font-bold ${meta.accent}`}>Hubungi Kami</div>
+                    )}
+                </div>
+
+                <ul className="flex-1 space-y-3 text-sm mb-7 text-text-dark/70">
+                    {meta.features.map((feat) => (
+                        <li key={feat} className="flex items-start gap-2.5">
+                            <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-secondary/10">
+                                <CheckIcon className="h-3 w-3 text-secondary" />
+                            </span>
+                            {feat}
+                        </li>
+                    ))}
+                </ul>
+
+                <Link href={ctaHref} className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}>
+                    {ctaLabel}
+                </Link>
+            </div>
+        );
+    };
+
+    // Wide, full-width MNC / Group card.
+    const renderMncCard = () => {
+        const meta = planMeta.MNC;
+        return (
+            <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 shadow-lg md:p-10">
+                <div className="grid gap-8 md:grid-cols-2 md:items-center">
+                    <div>
+                        <div className="mb-4 flex items-center gap-3">
+                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
+                                <PlanIcon path={meta.icon} className="h-6 w-6" />
+                            </span>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">{meta.label}</h3>
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{meta.tagline}</p>
+                            </div>
+                        </div>
+                        <p className="mb-6 max-w-md text-sm text-white/60">{meta.description}</p>
+                        <div className="mb-6">
+                            <div className="text-3xl font-bold text-white">Custom</div>
+                            <p className="mt-1 text-xs text-white/50">Harga sesuai kebutuhan perusahaan</p>
+                        </div>
+                        <Link
+                            href={MNC_CONTACT_HREF}
+                            className="inline-flex items-center justify-center rounded-xl bg-white px-8 py-3 text-sm font-bold text-slate-900 shadow-sm transition-all hover:bg-slate-100"
+                        >
+                            Hubungi Kami
+                        </Link>
+                    </div>
+                    <ul className="grid gap-3 text-sm text-white/80 sm:grid-cols-2 md:gap-4">
+                        {meta.features.map((feat) => (
+                            <li key={feat} className="flex items-start gap-2.5">
+                                <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-white/15">
+                                    <CheckIcon className="h-3 w-3 text-white" />
+                                </span>
+                                {feat}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <section id="pricing" className="relative py-24 bg-gradient-to-b from-neutral-light via-white to-neutral-light overflow-hidden">
             {/* Decorative blobs */}
@@ -269,116 +391,22 @@ export default function Pricing({ compact = false }: PricingProps) {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto items-stretch">
-                        {planOrder.map((plan) => {
-                            const meta = planMeta[plan];
-                            const planPrice = getPrice(plan);
-                            const isDark = plan === 'MNC';
-                            const isFree = plan === 'FREE_LOGIN';
-                            const isStudent = plan === 'STUDENT';
-                            const contactOnly = !!meta.contactOnly;
+                    <div className="mx-auto max-w-6xl space-y-6">
+                        {/* Top row: Free + Student side by side */}
+                        <div className="mx-auto grid max-w-3xl items-stretch gap-6 sm:grid-cols-2">
+                            {renderCard('FREE_LOGIN')}
+                            {renderCard('STUDENT')}
+                        </div>
 
-                            // Build CTA href + label
-                            let ctaHref: string;
-                            let ctaLabel: string;
-                            if (isFree) {
-                                ctaHref = '/register';
-                                ctaLabel = 'Mulai Gratis';
-                            } else if (isStudent) {
-                                ctaHref = studentEligible ? `/payment?plan=STUDENT&interval=${interval}` : '/kyc';
-                                ctaLabel = studentEligible ? 'Berlangganan' : 'Verifikasi KYC';
-                            } else if (contactOnly) {
-                                ctaHref = MNC_CONTACT_HREF;
-                                ctaLabel = 'Hubungi Kami';
-                            } else if (planPrice !== null) {
-                                ctaHref = `/payment?plan=${plan}&interval=${interval}`;
-                                ctaLabel = 'Berlangganan';
-                            } else {
-                                ctaHref = '/login';
-                                ctaLabel = 'Hubungi Kami';
-                            }
+                        {/* Main row: the three primary plans */}
+                        <div className="grid items-stretch gap-6 pt-2 lg:grid-cols-3">
+                            {renderCard('UMKM')}
+                            {renderCard('ENTERPRISE')}
+                            {renderCard('UNLIMITED')}
+                        </div>
 
-                            return (
-                                <div
-                                    key={plan}
-                                    className={`group relative flex flex-col rounded-3xl border p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.glow} ${meta.bg} ${meta.border} ${meta.popular ? 'lg:scale-[1.03] shadow-lg ring-1 ring-primary/20' : ''}`}
-                                >
-                                    {meta.popular ? (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                            <span className="rounded-full bg-primary px-4 py-1 text-xs font-bold text-white shadow-lg shadow-primary/30">
-                                                Paling Populer
-                                            </span>
-                                        </div>
-                                    ) : null}
-
-                                    {/* Icon + label */}
-                                    <div className="mb-5 flex items-center gap-3">
-                                        <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${meta.iconWrap}`}>
-                                            <PlanIcon path={meta.icon} className="h-6 w-6" />
-                                        </span>
-                                        <div>
-                                            <h3 className={`text-lg font-bold leading-tight ${isDark ? 'text-white' : 'text-text-dark'}`}>
-                                                {meta.label}
-                                            </h3>
-                                            <p className={`text-[11px] font-semibold uppercase tracking-wide ${isDark ? 'text-white/50' : 'text-text-dark/40'}`}>
-                                                {meta.tagline}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <p className={`mb-5 text-sm ${isDark ? 'text-white/60' : 'text-text-dark/60'}`}>
-                                        {meta.description}
-                                    </p>
-
-                                    {/* Price */}
-                                    <div className="mb-6 min-h-[64px]">
-                                        {isFree ? (
-                                            <div className={`text-3xl font-bold ${meta.accent}`}>Gratis</div>
-                                        ) : contactOnly ? (
-                                            <>
-                                                <div className={`text-2xl font-bold ${meta.accent}`}>Custom</div>
-                                                <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-text-dark/50'}`}>
-                                                    Harga sesuai kebutuhan perusahaan
-                                                </p>
-                                            </>
-                                        ) : planPrice !== null ? (
-                                            <>
-                                                <div className="flex items-end gap-1">
-                                                    <span className={`text-3xl font-bold leading-none ${meta.accent}`}>
-                                                        {formatCurrency(planPrice)}
-                                                    </span>
-                                                </div>
-                                                <p className={`text-xs mt-1.5 ${isDark ? 'text-white/50' : 'text-text-dark/50'}`}>
-                                                    per {interval === 'MONTHLY' ? 'bulan' : 'tahun'}
-                                                </p>
-                                            </>
-                                        ) : (
-                                            <div className={`text-xl font-bold ${meta.accent}`}>Hubungi Kami</div>
-                                        )}
-                                    </div>
-
-                                    {/* Features */}
-                                    <ul className={`flex-1 space-y-3 text-sm mb-7 ${isDark ? 'text-white/80' : 'text-text-dark/70'}`}>
-                                        {meta.features.map((feat) => (
-                                            <li key={feat} className="flex items-start gap-2.5">
-                                                <span className={`mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${isDark ? 'bg-white/15' : 'bg-secondary/10'}`}>
-                                                    <CheckIcon className={`h-3 w-3 ${isDark ? 'text-white' : 'text-secondary'}`} />
-                                                </span>
-                                                {feat}
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    {/* CTA */}
-                                    <Link
-                                        href={ctaHref}
-                                        className={`block w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-sm ${meta.cta}`}
-                                    >
-                                        {ctaLabel}
-                                    </Link>
-                                </div>
-                            );
-                        })}
+                        {/* MNC / Group: own wide card */}
+                        {renderMncCard()}
                     </div>
                 )}
 
