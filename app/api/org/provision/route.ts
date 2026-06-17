@@ -30,7 +30,8 @@ export async function POST(request: Request) {
 
     const slug = (body.slug ?? '').trim().toLowerCase();
     const name = (body.name ?? '').trim();
-    const interval = body.interval === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+    // Backend expects lowercase 'month' | 'year' (zod enum). Map from the UI's MONTHLY/YEARLY.
+    const interval = body.interval === 'YEARLY' || body.interval === 'year' ? 'year' : 'month';
 
     if (!slug || !SLUG_RE.test(slug)) {
       return NextResponse.json({ error: 'Slug organisasi tidak valid.' }, { status: 400 });
