@@ -100,7 +100,7 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
         </div>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex gap-8 absolute left-1/2 -translate-x-1/2">
+        <div className="hidden md:flex gap-6 lg:gap-7 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
           <a href="/#home" className={`cursor-pointer transition-colors ${linkHover}`}>Beranda</a>
 
           {/* Fitur Dropdown */}
@@ -174,11 +174,8 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
             ) : null}
           </div>
 
-          <a href="/#products" className={`cursor-pointer transition-colors ${linkHover}`}>Produk</a>
-          <a href="/#testimonials" className={`cursor-pointer transition-colors ${linkHover}`}>Testimoni</a>
-          <a href="/#pricing" className={`cursor-pointer transition-colors ${linkHover}`}>Harga</a>
           <a href="/ai-models" className={`cursor-pointer transition-colors ${linkHover}`}>Model AI</a>
-          <a href="/#faq" className={`cursor-pointer transition-colors ${linkHover}`}>Tanya Jawab</a>
+          <a href="/download" className={`cursor-pointer transition-colors ${linkHover}`}>Download</a>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
@@ -340,11 +337,8 @@ export default function NavbarClient({ user, redirects }: NavbarClientProps) {
                   <svg viewBox="0 0 24 24" className="h-4 w-4 opacity-60" fill="none" stroke="currentColor" strokeWidth={1.8}><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
                   Tax Knowledge AI
                 </a>
-                <a href="/#products" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Produk</a>
-                <a href="/#testimonials" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Testimoni</a>
-                <a href="/#pricing" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Harga</a>
                 <a href="/ai-models" onClick={() => setIsMobileMenuOpen(false)} className="py-3 border-b border-white/10">Model AI</a>
-                <a href="/#faq" onClick={() => setIsMobileMenuOpen(false)} className="py-3">Tanya Jawab</a>
+                <a href="/download" onClick={() => setIsMobileMenuOpen(false)} className="py-3">Download</a>
                 {!user && (
                   <div className="flex gap-3 pt-4">
                     <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className={`flex-1 text-center rounded-full border px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors ${trialClasses}`}>
